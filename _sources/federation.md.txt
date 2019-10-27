@@ -1,0 +1,26 @@
+# The mybinder.org Federation
+
+* GKE - <p id="gke">???</p>
+* OVH - <p id="ovh">???</p>
+
+
+<script>
+var fedUrls = [
+    "https://gke.mybinder.org",
+    "https://ovh.mybinder.org",
+]
+fedUrls.forEach((url) => {
+    var urlHealth = url + '/health'
+    var urlPrefix = url.split('//')[1].split('.')[0]
+    var field = document.querySelector(`#${urlPrefix}`);
+    $.getJSON(urlHealth, {})
+        .done((resp) => {
+            field.textContent = "Success";
+            field.style.color = "green";
+        })
+        .fail((resp) => {
+            field.textContent = "Fail";
+            field.style.color = "red";
+    });
+})
+</script>

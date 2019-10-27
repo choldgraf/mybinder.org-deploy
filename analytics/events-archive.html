@@ -1,0 +1,314 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>The Analytics Events Archive &#8212; Site Reliability Guide for mybinder.org 1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Cloud Costs Data" href="cloud-costs.html" />
+    <link rel="prev" title="Matomo (formerly Piwik) analytics" href="../components/matomo.html" />
+
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<!-- Add JupyterHub styling -->
+<link rel="stylesheet" href="../_static/jupyter.css" type="text/css" />
+<link rel="shortcut icon" href="../_static/favicon.ico"/>
+
+
+  </head><body>
+<div class="rightsidebar">
+    <h3>On this page</h3>
+    <ul>
+<li><a class="reference internal" href="#">The Analytics Events Archive</a><ul>
+<li><a class="reference internal" href="#file-format">File format</a></li>
+<li><a class="reference internal" href="#launch-data-by-date">Launch data by date</a><ul>
+<li><a class="reference internal" href="#example-code">Example code</a><ul>
+<li><a class="reference internal" href="#pandas"><code class="docutils literal notranslate"><span class="pre">pandas</span></code></a></li>
+<li><a class="reference internal" href="#plain-python">Plain Python</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#index-jsonl"><code class="docutils literal notranslate"><span class="pre">index.jsonl</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+   <div class='prev-next-top'>
+     
+      <a class='left-prev' href="../components/matomo.html" title="previous chapter">Previous</a>
+      <a class='right-next' href="cloud-costs.html" title="next chapter">Next</a>
+   <div style='clear:both;'></div>
+ 
+   </div>
+
+
+          <div class="body" role="main">
+            
+  <div class="section" id="the-analytics-events-archive">
+<span id="analytics-events-archive"></span><h1>The Analytics Events Archive<a class="headerlink" href="#the-analytics-events-archive" title="Permalink to this headline">¶</a></h1>
+<p>BinderHub emits an event each time a repository is launched. They
+are recorded as JSON, and made available to the public at
+<a class="reference external" href="https://archive.analytics.mybinder.org">archive.analytics.mybinder.org</a>.</p>
+<p>This page describes what is available in the Events Archive &amp; how to
+interpret it.</p>
+<div class="section" id="file-format">
+<h2>File format<a class="headerlink" href="#file-format" title="Permalink to this headline">¶</a></h2>
+<p>All data files are in <a class="reference external" href="http://jsonlines.org/">jsonl</a> format. Each line,
+delimited by a <code class="docutils literal notranslate"><span class="pre">\n</span></code> is a is a well formed JSON object. These files can
+be read / written in a streaming fashion, one line at a time, without
+having to read the entire file into memory.</p>
+</div>
+<div class="section" id="launch-data-by-date">
+<h2>Launch data by date<a class="headerlink" href="#launch-data-by-date" title="Permalink to this headline">¶</a></h2>
+<p>For each day since we started keeping track (2018-11-03), there is a
+file named <code class="docutils literal notranslate"><span class="pre">events-&lt;YYYY&gt;-&lt;MM&gt;-&lt;DD&gt;.jsonl</span></code> that contains data for
+all the launches performed by mybinder.org on that date. All timestamps
+and dates are in <a class="reference external" href="https://en.wikipedia.org/wiki/Coordinated_Universal_Time">UTC</a>.</p>
+<p>Each line is a JSON object that conforms to <a class="reference external" href="https://github.com/jupyterhub/binderhub/blob/master/binderhub/event-schemas/launch.json">this JSON Schema</a>.
+A description of these fields is provided below.</p>
+<ol class="arabic">
+<li><p><strong>schema</strong> and <strong>version</strong></p>
+<p>Currently set to <code class="docutils literal notranslate"><span class="pre">binderhub.jupyter.org/launch</span></code> and <code class="docutils literal notranslate"><span class="pre">1</span></code> respectively. These
+identify the kind of event this is (a launch event from BinderHub) and the
+current version of the event schema. This lets us evolve the format of the
+events emitted without breaking existing analytics code. New versions of
+the launch schema may add additional fields, or change meanings of current
+ones. We will definitely add other events that are available here too -
+for example, successful builds.</p>
+<p>Your analytics code <strong>must</strong> make sure the event you are parsing has
+the schema and version you are expecting before proceeding. If you
+don’t do this, your code might fail in unexpected ways in the future.</p>
+</li>
+<li><p><strong>timestamp</strong></p>
+<p>ISO8601 formatted timestamp when the event was emitted. These are rounded
+down to the closest minute. The lines in the file are ordered by timestamp,
+starting at the earliest.</p>
+</li>
+<li><p><strong>provider</strong></p>
+<p>Where the launched repository was hosted. Current options are <code class="docutils literal notranslate"><span class="pre">GitHub</span></code>,
+<code class="docutils literal notranslate"><span class="pre">GitLab</span></code> and <code class="docutils literal notranslate"><span class="pre">Git</span></code>.</p>
+</li>
+<li><p><strong>spec</strong></p>
+<p>Specification identifying the repository / commit immutably &amp; uniquely in
+the provider.</p>
+<p>For GitHub, it is <code class="docutils literal notranslate"><span class="pre">&lt;repo&gt;/&lt;commit-spec&gt;</span></code>. Example would be <code class="docutils literal notranslate"><span class="pre">yuvipanda/example-requirements/master</span></code>.
+For GitLab, it is <code class="docutils literal notranslate"><span class="pre">&lt;repo&gt;/&lt;commit-spec&gt;</span></code>, except <code class="docutils literal notranslate"><span class="pre">repo</span></code> is URL escaped.
+For raw Git repositories, it is <code class="docutils literal notranslate"><span class="pre">&lt;repo-url&gt;/&lt;commit-spec&gt;</span></code>. <code class="docutils literal notranslate"><span class="pre">repo-url</span></code> is full URL escaped
+to the repo and <code class="docutils literal notranslate"><span class="pre">commit-spec</span></code> is a full commit hash.</p>
+</li>
+<li><p><strong>status</strong></p>
+<p>Wether the launch succeeded (<code class="docutils literal notranslate"><span class="pre">success</span></code>) or failed (<code class="docutils literal notranslate"><span class="pre">failure</span></code>). Currently
+only successful launches are recorded.</p>
+</li>
+</ol>
+<div class="section" id="example-code">
+<h3>Example code<a class="headerlink" href="#example-code" title="Permalink to this headline">¶</a></h3>
+<p>Some popular ways of reading this event data into a useful data structure are
+provided here.</p>
+<div class="section" id="pandas">
+<h4><code class="docutils literal notranslate"><span class="pre">pandas</span></code><a class="headerlink" href="#pandas" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_json</span><span class="p">(</span><span class="s2">&quot;https://archive.analytics.mybinder.org/events-2018-11-05.jsonl&quot;</span><span class="p">,</span> <span class="n">lines</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">df</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="plain-python">
+<h4>Plain Python<a class="headerlink" href="#plain-python" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://archive.analytics.mybinder.org/events-2018-11-05.jsonl&quot;</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">iter_lines</span><span class="p">()]</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="index-jsonl">
+<h2><code class="docutils literal notranslate"><span class="pre">index.jsonl</span></code><a class="headerlink" href="#index-jsonl" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference external" href="https://archive.analytics.mybinder.org/index.jsonl">index.jsonl</a> file lists
+all the dates an event archive is available for. The following fields are present
+for each line:</p>
+<ol class="arabic">
+<li><p><strong>date</strong></p>
+<p>The UTC date the event archive is for</p>
+</li>
+<li><p><strong>name</strong></p>
+<p>The name of the file containing the events. This is a relative path - since we
+got the <code class="docutils literal notranslate"><span class="pre">index.jsonl</span></code> file from <cite>https://archive.analytics.mybinder.org</cite>, that
+is the base URL used to resolve these. For example when <code class="docutils literal notranslate"><span class="pre">name</span></code> is
+<code class="docutils literal notranslate"><span class="pre">events-2018-11-05.jsonl</span></code>, the full URL to the file is
+<code class="docutils literal notranslate"><span class="pre">https://archive.analytics.mybinder.org/events-2018-11-05.jsonl</span></code>.</p>
+</li>
+<li><p><strong>count</strong></p>
+<p>Total number of events in the file.</p>
+</li>
+</ol>
+</div>
+</div>
+
+
+          </div>
+   <div class='prev-next-bottom'>
+     
+      <a class='left-prev' href="../components/matomo.html" title="previous chapter">Matomo (formerly Piwik) analytics</a>
+      <a class='right-next' href="cloud-costs.html" title="next chapter">Cloud Costs Data</a>
+   <div style='clear:both;'></div>
+ 
+   </div>
+
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <p class="logo"><a href="../index.html">
+    <img class="logo" src="../_static/logo.jpg" alt="Logo"/>
+  </a></p>
+<h1 class="logo"><a href="../index.html">Site Reliability Guide for mybinder.org</a></h1>
+
+
+
+<p class="blurb">A Site Reliability Guide for mybinder.org deployment</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=jupyterhub&repo=binderhub&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<h3>Table of Contents</h3>
+<p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting started with the <code class="docutils literal notranslate"><span class="pre">mybinder.org</span></code> dev team</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../production_environment.html">Production environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../terminology.html">Terminology for the deployment</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Deployment</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/prereqs.html">Pre-requisite technologies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/how.html">How to deploy a change to mybinder.org?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/what.html">What does a MyBinder.org deployment do?</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Operation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../common_problems.html">Common problems and their solutions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../command_snippets.html">Command snippets used during operations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../grafana_plots.html">Some useful Grafana plots</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../components/metrics.html">Metrics collection with Prometheus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/dashboards.html">Operational Dashboards with Grafana</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/ingress.html">HTTPS ingress with nginx + kube-lego</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/cloud.html">Cloud products</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/matomo.html">Matomo (formerly Piwik) analytics</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">The Analytics Events Archive</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#file-format">File format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#launch-data-by-date">Launch data by date</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#index-jsonl"><code class="docutils literal notranslate"><span class="pre">index.jsonl</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cloud-costs.html">Cloud Costs Data</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Incidents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2019-04-03-ingress-cordoned.html">2019-04-03, 30min outage during node pool upgrade</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2019-03-24-r2d-upgrade.html">2019-03-24, repo2docker upgrade and docker image cache wipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2019-02-20-no-logs.html">incident date: 2019-02-20, kubectl logs unavailable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-07-30-jupyterlab-build-cpu-saturate.html">2018-07-30 JupyterLab builds saturate BinderHub CPU</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-07-08-podsnips-aplenty.html">2018-07-08, too many pods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-04-18-cull-flood.html">2018-04-18, Culler flood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-03-31-server-start-fail.html">2018-03-31, Server launch failures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-03-26-no-space-left.html">2018-03-26, “no space left on device”</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-03-13-PVC-hub-locked.html">2018-03-13, PVC for hub is locked</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-02-22-nginx-down.html">2018-02-22 NGINX crash</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-02-20-jupyterlab-announcement.html">2018-02-20, JupyterLab Announcement swamps Binder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-02-12-launch-fail.html">2018-02-12, Hub Launch Fail</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-01-18-reddit-hug.html">2018-01-18, reddit hugs mybinder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-01-18-ssl-outdated.html">2018-01-11, Warning from letsencrypt about outdated SSL certificate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-01-17-ubuntu-upgrade.html">2018-01-17, Emergency Aardvark bump</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-01-04-failed-staging-deploy.html">2018-01-04, Failed deploy to staging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2017-11-30-oom-proxy.html">2017-11-30 4:23PM PST, OOM (Out of Memory) Proxy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2017-10-17-cluster-full.html">2017-10-17, Cluster Full</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2017-09-29-504.html">2017-09-29, 504</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2017-09-27-hub-403.html">2017-09-27, Hub 403</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/template-incident-report.html">Template for reports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/template-incident-report.html#incident-date-yyyy-mm-dd-incident-name">{{ incident date: yyyy-mm-dd }}, {{ incident name }}</a></li>
+</ul>
+
+
+<div class="relations">
+<h3>Navigation</h3>
+<ul>
+  <li><a href="../index.html">Documentation Home</a><ul>
+  <li><a href="../components/matomo.html" title="Previous">Previous topic</a></li>
+  <li><a href="cloud-costs.html" title="Next">Next topic</a></li>
+  </ul>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/analytics/events-archive.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+        <form class="search" action="../search.html" method="get">
+            <input type="text" name="q" placeholder="Quick Search" aria-labelledby="searchlabel" />
+            <input type="submit" value="Go" />
+        </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017 - 2019, Binder Team.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/analytics/events-archive.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

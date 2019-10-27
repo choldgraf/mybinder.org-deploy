@@ -1,0 +1,403 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Cloud products &#8212; Site Reliability Guide for mybinder.org 1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Matomo (formerly Piwik) analytics" href="matomo.html" />
+    <link rel="prev" title="HTTPS ingress with nginx + kube-lego" href="ingress.html" />
+
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<!-- Add JupyterHub styling -->
+<link rel="stylesheet" href="../_static/jupyter.css" type="text/css" />
+<link rel="shortcut icon" href="../_static/favicon.ico"/>
+
+
+  </head><body>
+<div class="rightsidebar">
+    <h3>On this page</h3>
+    <ul>
+<li><a class="reference internal" href="#">Cloud products</a><ul>
+<li><a class="reference internal" href="#philosophy">Philosophy</a></li>
+<li><a class="reference internal" href="#projects">Projects</a></li>
+<li><a class="reference internal" href="#google-kubernetes-engine">Google Kubernetes Engine</a><ul>
+<li><a class="reference internal" href="#cluster">Cluster</a></li>
+<li><a class="reference internal" href="#node-pools">Node Pools</a></li>
+<li><a class="reference internal" href="#machine-sizes">Machine sizes</a></li>
+<li><a class="reference internal" href="#boot-disk-sizes">Boot disk sizes</a></li>
+<li><a class="reference internal" href="#autoscaling">Autoscaling</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#google-container-registry">Google Container Registry</a><ul>
+<li><a class="reference internal" href="#authentication">Authentication</a></li>
+<li><a class="reference internal" href="#access">Access</a></li>
+<li><a class="reference internal" href="#naming">Naming</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#logging-metrics-and-dashboarding">Logging, Metrics, and Dashboarding</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+   <div class='prev-next-top'>
+     
+      <a class='left-prev' href="ingress.html" title="previous chapter">Previous</a>
+      <a class='right-next' href="matomo.html" title="next chapter">Next</a>
+   <div style='clear:both;'></div>
+ 
+   </div>
+
+
+          <div class="body" role="main">
+            
+  <div class="section" id="cloud-products">
+<span id="cloud-products"></span><h1>Cloud products<a class="headerlink" href="#cloud-products" title="Permalink to this headline">¶</a></h1>
+<p>mybinder.org runs on <a class="reference external" href="https://cloud.google.com/">Google Cloud</a> currently.
+This document lists the various cloud products we use, and how we use them.</p>
+<div class="section" id="philosophy">
+<span id="philosophy"></span><h2>Philosophy<a class="headerlink" href="#philosophy" title="Permalink to this headline">¶</a></h2>
+<p>We use <strong>only</strong> commodity cloud products - things that can be easily
+replicated in other clouds <em>and</em> bare-metal hardware. This gives us
+several technical and social advantages:</p>
+<ol class="simple">
+<li><p>We avoid vendor lock-in, and can migrate providers if need be
+for any reason easily.</p></li>
+<li><p>It makes our infrastructure easily reproducible by others,
+who might have different resources available to them. This is
+much harder if we have a hard dependency on any single cloud-provider’s
+products.</p></li>
+<li><p>We can more easily contribute back to the open-source community.
+Most such commodity products are open source, or have binary-
+compatible open source implementations available. This allows us
+to file and fix bugs in other Open Source Software for the benefit
+of everyone, rather than just a particular cloud provider’s implementation.</p></li>
+<li><p>Local testing when a core component depends on a cloud provider’s
+product is usually very difficult. Constraining ourselves to commodity
+products only makes this easier.</p></li>
+</ol>
+<p>As an example, using PostgreSQL via <a class="reference external" href="https://cloud.google.com/sql/docs/">Google Cloud SQL</a>
+would be fine since anyone can run PostgreSQL. But using something like
+<a class="reference external" href="https://cloud.google.com/spanner/">Google Cloud Spanner</a> or
+<a class="reference external" href="https://cloud.google.com/pubsub/docs/">Google Cloud PubSub</a> is something to be
+avoided, since these can not be run without also being on Google Cloud.
+Similarly, using <a class="reference external" href="https://cloud.google.com/load-balancing/">Google Cloud LoadBalancing</a>
+is also perfectly fine, since a lot of open source solutions (HAProxy, Envoy, nginx, etc)
+can be used to provide the same service.</p>
+</div>
+<div class="section" id="projects">
+<span id="projects"></span><h2>Projects<a class="headerlink" href="#projects" title="Permalink to this headline">¶</a></h2>
+<p>We have two major <a class="reference external" href="https://cloud.google.com/storage/docs/projects">projects</a>
+that run on Google Cloud.</p>
+<ol class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">binder-prod</span></code>, runs production - <code class="docutils literal notranslate"><span class="pre">mybinder.org</span></code> and all resources
+needed for it.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">binder-staging</span></code> runs staging - <code class="docutils literal notranslate"><span class="pre">staging.mybinder.org</span></code> and all resources
+needed for it.</p></li>
+</ol>
+<p>We try to make staging and prod be as similar as possible. Staging should
+be smaller and use fewer resources. Everything we describe below
+is present in staging too.</p>
+</div>
+<div class="section" id="google-kubernetes-engine">
+<span id="google-kubernetes-engine"></span><h2>Google Kubernetes Engine<a class="headerlink" href="#google-kubernetes-engine" title="Permalink to this headline">¶</a></h2>
+<p>The open source <a class="reference external" href="https://kubernetes.io/">Kubernetes</a> project is used to run
+all our code. <a class="reference external" href="https://cloud.google.com/kubernetes-engine/">Google Kubernetes Engine (GKE)</a>
+is the google hosted version of Kubernetes. It is very close to what is shipped
+as Open Source, and does not have much in the way of proprietary enhancements.</p>
+<div class="section" id="cluster">
+<span id="cluster"></span><h3>Cluster<a class="headerlink" href="#cluster" title="Permalink to this headline">¶</a></h3>
+<p>In production, the cluster is called <code class="docutils literal notranslate"><span class="pre">prod-a</span></code>. In staging, it is called <code class="docutils literal notranslate"><span class="pre">staging</span></code>.</p>
+</div>
+<div class="section" id="node-pools">
+<span id="node-pools"></span><h3>Node Pools<a class="headerlink" href="#node-pools" title="Permalink to this headline">¶</a></h3>
+<p>GKE has the concept of a <a class="reference external" href="https://cloud.google.com/kubernetes-engine/docs/concepts/node-pools">NodePool</a>
+that specifies the kind of machine (RAM, CPU, Storage) we want to use for our Kubernetes
+cluster. If we want to change the kind of machines we use, we can create a new NodePool,
+cordon the current one, wait for all pods in current nodes to die, and then delete the
+current NodePool.</p>
+</div>
+<div class="section" id="machine-sizes">
+<span id="machine-sizes"></span><h3>Machine sizes<a class="headerlink" href="#machine-sizes" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">prod-a</span></code> cluster currently uses <code class="docutils literal notranslate"><span class="pre">n1-highmem-32</span></code> machines. These have
+32 CPU cores and 208 GB of Memory. We use the <code class="docutils literal notranslate"><span class="pre">highmem</span></code> machines (with more Memory per CPU)
+as opposed to <code class="docutils literal notranslate"><span class="pre">standard</span></code> machines for the following reasons:</p>
+<ol class="simple">
+<li><p>Memory is an <em>incompressible</em> resource - once you give a process memory, you can
+not take it away without killing the process. CPU is <em>compressible</em> - you can
+take away how much CPU a process is using without killing it.</p></li>
+<li><p>Our users generally seem to be running not-very-cpu-intensive code, as can be
+witnessed from our generally low CPU usage.</p></li>
+<li><p>Docker layer caching gives us massive performance boosts - less time spent
+pulling images leads to faster startup times for users. Using larger nodes
+increases the cache hit rate, so we use nodes with more rather than less RAM.</p></li>
+</ol>
+<p><em>tl;dr: Using <code class="docutils literal notranslate"><span class="pre">highmem</span></code> machines saves us a lot of money, since we are not paying for CPU
+we are not using!</em></p>
+<p>The <code class="docutils literal notranslate"><span class="pre">staging</span></code> cluster uses much smaller machines than the production one, to keep costs
+down.</p>
+</div>
+<div class="section" id="boot-disk-sizes">
+<span id="boot-disk-sizes"></span><h3>Boot disk sizes<a class="headerlink" href="#boot-disk-sizes" title="Permalink to this headline">¶</a></h3>
+<p>In <code class="docutils literal notranslate"><span class="pre">prod-a</span></code>, we use 1000 GB SSD disks as boot disks. On Google Cloud, the size of
+the disk <a class="reference external" href="https://cloud.google.com/compute/docs/disks/performance">controls the performance</a> - larger the disk, the faster it is. Our disks need to be fast since we
+are doing a lot of I/O operations during docker build / push / pull / run, so we
+use SSDs.</p>
+<p>Note that SSD boot disks are <em>not</em> a feature available on GKE to all customers -
+we have been given <a class="reference external" href="https://github.com/kubernetes/kubernetes/issues/36499">early access</a>
+to this feature, since it makes a dramatic difference to our performance (and
+we knew where to ask!).</p>
+<p>Staging does not use SSD boot disks.</p>
+</div>
+<div class="section" id="autoscaling">
+<span id="autoscaling"></span><h3>Autoscaling<a class="headerlink" href="#autoscaling" title="Permalink to this headline">¶</a></h3>
+<p>We use the GKE <a class="reference external" href="https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-autoscaler">Cluster Autoscaler</a>
+feature to add more nodes when we run out of resources. When the cluster is 100%
+full, the cluster autoscaler adds a new node to handle more pods. However,
+there is no way to make the autoscaler kick in at 80% of 90% utilization
+(<a class="reference external" href="https://github.com/kubernetes/autoscaler/issues/148">bug</a>), so this leads
+to <a class="reference external" href="https://github.com/jupyterhub/mybinder.org-deploy/issues/474">launch failures</a>
+for a short time when a new node comes up.</p>
+<p>The autoscaler can be set to have a <code class="docutils literal notranslate"><span class="pre">minimum</span></code> number of nodes and a <code class="docutils literal notranslate"><span class="pre">maximum</span></code> number
+of nodes.</p>
+</div>
+</div>
+<div class="section" id="google-container-registry">
+<span id="google-container-registry"></span><h2>Google Container Registry<a class="headerlink" href="#google-container-registry" title="Permalink to this headline">¶</a></h2>
+<p>A core part of mybinder.org is building, storing and then running docker images
+(built by <a class="reference external" href="https://github.com/jupyter/repo2docker">repo2docker</a>). Docker images
+are generally stored in a <a class="reference external" href="https://github.com/docker/distribution">docker registry</a>,
+using a well-defined standard API.</p>
+<p>We use Google Cloud’s hosted docker registry - <a class="reference external" href="https://cloud.google.com/container-registry/">Google Container Registry (GCR)</a>.
+This lets us use a standard mechanism for storing and retrieving docker images
+without having to run any of that infrastructure ourselves.</p>
+<div class="section" id="authentication">
+<span id="authentication"></span><h3>Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h3>
+<p>GCR is private by default, and can be only used from inside the Google Cloud project
+the registry is located in. When using GKE, the authentication for pulling images
+to run is already set up for us, so we do not need to do anything special. For pushing
+images, we authenticate via a <a class="reference external" href="https://cloud.google.com/container-registry/docs/advanced-authentication#using_a_json_key_file">service account</a>.</p>
+<p>You can find this service account credential under <code class="docutils literal notranslate"><span class="pre">registry</span></code> in <code class="docutils literal notranslate"><span class="pre">secrets/config/prod.yaml</span></code>
+and <code class="docutils literal notranslate"><span class="pre">secrets/config/staging.yaml</span></code>.</p>
+</div>
+<div class="section" id="access">
+<span id="access"></span><h3>Access<a class="headerlink" href="#access" title="Permalink to this headline">¶</a></h3>
+<p>The images are scoped per-project, the images made by <code class="docutils literal notranslate"><span class="pre">mybinder.org</span></code> are
+stored in the <code class="docutils literal notranslate"><span class="pre">binder-prod</span></code> project, and the images made by <code class="docutils literal notranslate"><span class="pre">staging.mybinder.org</span></code>
+are stored in the <code class="docutils literal notranslate"><span class="pre">binder-staging</span></code> project.</p>
+<p>We do not allow users to pull our images, for a few reasons:</p>
+<ol class="simple">
+<li><p>We pay network egress costs when images are used outside the project they are in,
+and this can become very costly!</p></li>
+<li><p>This can be abused to treat us as a content redistributor - build
+an image with content you want, and then just pull the image from elsewhere. This
+makes us a convenient possible hop in cybercrime / piracy / other operations,
+complicates possible <a class="reference external" href="https://en.wikipedia.org/wiki/Digital_Millennium_Copyright_Act">DMCA</a>
+/ <a class="reference external" href="https://en.wikipedia.org/wiki/General_Data_Protection_Regulation">GDPR</a> compliance and
+probably a bunch of other bad things we do not have the imagination to foresee.</p></li>
+<li><p>We might decide to clean up old images when we no longer need them, and this might
+break other users who might depend on this.</p></li>
+</ol>
+<p>For users who want access to a docker image similar to how it is built with Binder,
+we recommend using <a class="reference external" href="https://github.com/jupyter/repo2docker">repo2docker</a> to build
+your own, and push it to a registry of your choice.</p>
+</div>
+<div class="section" id="naming">
+<span id="naming"></span><h3>Naming<a class="headerlink" href="#naming" title="Permalink to this headline">¶</a></h3>
+<p>Since building an image takes a long time, we would like to re-use images as much
+as possible. If we have built an image once for a particular repository at a particular
+commit, we want to not rebuild that image - just re-use it as much as possible.
+We generate an image name for each image we build that is uniquely derived from
+the name of the repository + the commit hash. This lets us check if
+the image has already been built, and if so, we can skip the building step.</p>
+<p>The code for generating the image name from repository information is
+in <a class="reference external" href="https://github.com/jupyterhub/binderhub/blob/master/binderhub/builder.py">binderhub’s builder.py</a>,
+under <code class="docutils literal notranslate"><span class="pre">_generate_build_name</span></code>.</p>
+<p>Sometimes, we <em>do</em> want to invalidate all previously built images - for example,
+when we do a major notebook version bump. This will cause all repositories to be
+rebuilt the next time they are launched. There is a performance cost to this, so
+this invalidation has to be done judiciously. This is done by giving all the images
+a <code class="docutils literal notranslate"><span class="pre">prefix</span></code> (<code class="docutils literal notranslate"><span class="pre">binderhub.registry.prefix</span></code> in <code class="docutils literal notranslate"><span class="pre">config/prod.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">config/staging.yaml</span></code>).
+Changing this prefix will invalidate all existing images.</p>
+</div>
+</div>
+<div class="section" id="logging-metrics-and-dashboarding">
+<span id="logging-metrics-and-dashboarding"></span><h2>Logging, Metrics, and Dashboarding<a class="headerlink" href="#logging-metrics-and-dashboarding" title="Permalink to this headline">¶</a></h2>
+<p>We use <a class="reference external" href="https://cloud.google.com/stackdriver/">Google Stackdriver</a> for logging
+activity on the Kubernetes deployment. This is useful for listing the raw
+logs coming out of BinderHub, though we don’t use it for dashboarding (see below).</p>
+<p>We use <a class="reference external" href="components/metrics.html">prometheus</a> for collecting more fine-grained metrics about
+what’s happening on the deployment, and <a class="reference external" href="components/dashboards.html">grafana</a> for generating
+dashboards using the data from prometheus.</p>
+<p>We use <a class="reference external" href="https://analytics.google.com/analytics/web">Google Analytics</a> to keep
+track of activity on the <code class="docutils literal notranslate"><span class="pre">mybinder.org</span></code> site, though note that we lose track
+of users as soon as they are directed to their Binder session.</p>
+</div>
+</div>
+
+
+          </div>
+   <div class='prev-next-bottom'>
+     
+      <a class='left-prev' href="ingress.html" title="previous chapter">HTTPS ingress with nginx + kube-lego</a>
+      <a class='right-next' href="matomo.html" title="next chapter">Matomo (formerly Piwik) analytics</a>
+   <div style='clear:both;'></div>
+ 
+   </div>
+
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <p class="logo"><a href="../index.html">
+    <img class="logo" src="../_static/logo.jpg" alt="Logo"/>
+  </a></p>
+<h1 class="logo"><a href="../index.html">Site Reliability Guide for mybinder.org</a></h1>
+
+
+
+<p class="blurb">A Site Reliability Guide for mybinder.org deployment</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=jupyterhub&repo=binderhub&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<h3>Table of Contents</h3>
+<p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting started with the <code class="docutils literal notranslate"><span class="pre">mybinder.org</span></code> dev team</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../production_environment.html">Production environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../terminology.html">Terminology for the deployment</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Deployment</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/prereqs.html">Pre-requisite technologies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/how.html">How to deploy a change to mybinder.org?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/what.html">What does a MyBinder.org deployment do?</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Operation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../common_problems.html">Common problems and their solutions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../command_snippets.html">Command snippets used during operations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../grafana_plots.html">Some useful Grafana plots</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="metrics.html">Metrics collection with Prometheus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dashboards.html">Operational Dashboards with Grafana</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ingress.html">HTTPS ingress with nginx + kube-lego</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Cloud products</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#philosophy">Philosophy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#projects">Projects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#google-kubernetes-engine">Google Kubernetes Engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#google-container-registry">Google Container Registry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#logging-metrics-and-dashboarding">Logging, Metrics, and Dashboarding</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="matomo.html">Matomo (formerly Piwik) analytics</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../analytics/events-archive.html">The Analytics Events Archive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analytics/cloud-costs.html">Cloud Costs Data</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Incidents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2019-04-03-ingress-cordoned.html">2019-04-03, 30min outage during node pool upgrade</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2019-03-24-r2d-upgrade.html">2019-03-24, repo2docker upgrade and docker image cache wipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2019-02-20-no-logs.html">incident date: 2019-02-20, kubectl logs unavailable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-07-30-jupyterlab-build-cpu-saturate.html">2018-07-30 JupyterLab builds saturate BinderHub CPU</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-07-08-podsnips-aplenty.html">2018-07-08, too many pods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-04-18-cull-flood.html">2018-04-18, Culler flood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-03-31-server-start-fail.html">2018-03-31, Server launch failures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-03-26-no-space-left.html">2018-03-26, “no space left on device”</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-03-13-PVC-hub-locked.html">2018-03-13, PVC for hub is locked</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-02-22-nginx-down.html">2018-02-22 NGINX crash</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-02-20-jupyterlab-announcement.html">2018-02-20, JupyterLab Announcement swamps Binder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-02-12-launch-fail.html">2018-02-12, Hub Launch Fail</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-01-18-reddit-hug.html">2018-01-18, reddit hugs mybinder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-01-18-ssl-outdated.html">2018-01-11, Warning from letsencrypt about outdated SSL certificate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-01-17-ubuntu-upgrade.html">2018-01-17, Emergency Aardvark bump</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-01-04-failed-staging-deploy.html">2018-01-04, Failed deploy to staging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2017-11-30-oom-proxy.html">2017-11-30 4:23PM PST, OOM (Out of Memory) Proxy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2017-10-17-cluster-full.html">2017-10-17, Cluster Full</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2017-09-29-504.html">2017-09-29, 504</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2017-09-27-hub-403.html">2017-09-27, Hub 403</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/template-incident-report.html">Template for reports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/template-incident-report.html#incident-date-yyyy-mm-dd-incident-name">{{ incident date: yyyy-mm-dd }}, {{ incident name }}</a></li>
+</ul>
+
+
+<div class="relations">
+<h3>Navigation</h3>
+<ul>
+  <li><a href="../index.html">Documentation Home</a><ul>
+  <li><a href="ingress.html" title="Previous">Previous topic</a></li>
+  <li><a href="matomo.html" title="Next">Next topic</a></li>
+  </ul>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/components/cloud.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+        <form class="search" action="../search.html" method="get">
+            <input type="text" name="q" placeholder="Quick Search" aria-labelledby="searchlabel" />
+            <input type="submit" value="Go" />
+        </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017 - 2019, Binder Team.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/components/cloud.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

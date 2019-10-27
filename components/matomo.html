@@ -1,0 +1,279 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Matomo (formerly Piwik) analytics &#8212; Site Reliability Guide for mybinder.org 1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="The Analytics Events Archive" href="../analytics/events-archive.html" />
+    <link rel="prev" title="Cloud products" href="cloud.html" />
+
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<!-- Add JupyterHub styling -->
+<link rel="stylesheet" href="../_static/jupyter.css" type="text/css" />
+<link rel="shortcut icon" href="../_static/favicon.ico"/>
+
+
+  </head><body>
+<div class="rightsidebar">
+    <h3>On this page</h3>
+    <ul>
+<li><a class="reference internal" href="#">Matomo (formerly Piwik) analytics</a><ul>
+<li><a class="reference internal" href="#why">Why?</a></li>
+<li><a class="reference internal" href="#how-it-is-set-up">How it is set up?</a></li>
+<li><a class="reference internal" href="#initial-installation">Initial Installation</a></li>
+<li><a class="reference internal" href="#admin-access">Admin access</a></li>
+<li><a class="reference internal" href="#security">Security</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+   <div class='prev-next-top'>
+     
+      <a class='left-prev' href="cloud.html" title="previous chapter">Previous</a>
+      <a class='right-next' href="../analytics/events-archive.html" title="next chapter">Next</a>
+   <div style='clear:both;'></div>
+ 
+   </div>
+
+
+          <div class="body" role="main">
+            
+  <div class="section" id="matomo-formerly-piwik-analytics">
+<span id="matomo"></span><h1>Matomo (formerly Piwik) analytics<a class="headerlink" href="#matomo-formerly-piwik-analytics" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference external" href="https://matomo.org/">Matomo</a> is a self-hosted free &amp;
+open source alternative to <a class="reference external" href="https://analytics.google.com">Google Analytics</a>.</p>
+<div class="section" id="why">
+<h2>Why?<a class="headerlink" href="#why" title="Permalink to this headline">¶</a></h2>
+<p>Matomo gives us better control of what is tracked, how long it is stored
+&amp; what we can do with the data. We would like to collect as
+little data as possible &amp; share it with the world in safe ways
+as much as possible. Matomo is an important step in making this possible.</p>
+</div>
+<div class="section" id="how-it-is-set-up">
+<h2>How it is set up?<a class="headerlink" href="#how-it-is-set-up" title="Permalink to this headline">¶</a></h2>
+<p>Matomo is a PHP+MySQL application. We use the apache based upstream
+<a class="reference external" href="https://hub.docker.com/_/matomo/">docker image</a> to run it. We can
+improve performance in the future if we wish by switching to <code class="docutils literal notranslate"><span class="pre">nginx+fpm</span></code>.</p>
+<p>We use <a class="reference external" href="https://cloud.google.com/sql/docs/mysql/">Google CloudSQL for MySQL</a>
+to provision a fully managed, standard mysql database. The
+<a class="reference external" href="https://cloud.google.com/sql/docs/mysql/connect-kubernetes-engine">sidecar pattern</a>
+is used to connect Matomo to this database. A service account with appropriate
+credentials to connect to the database has been provisioned &amp; checked-in
+to the repo. A MySQL user with name <code class="docutils literal notranslate"><span class="pre">matomo</span></code> &amp; a MySQL database with name <code class="docutils literal notranslate"><span class="pre">matomo</span></code>
+should also be created in the Google Cloud Console.</p>
+</div>
+<div class="section" id="initial-installation">
+<h2>Initial Installation<a class="headerlink" href="#initial-installation" title="Permalink to this headline">¶</a></h2>
+<p>Matomo is a PHP application, and this has a number of drawbacks. The initial
+install <strong>`must &lt;https://github.com/matomo-org/matomo/issues/10257&gt;`_</strong> be completed
+with a manual web interface. Matomo will error if it finds a complete <code class="docutils literal notranslate"><span class="pre">config.ini.php</span></code>
+file (which we provide) but no database tables exist.</p>
+<p>The first time you install Matomo, you need to do the following:</p>
+<ol class="arabic simple">
+<li><p>Do a deploy. This sets up Matomo, but not the database tables</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">--namespace=&lt;namespace&gt;</span> <span class="pre">exec</span> <span class="pre">-it</span> <span class="pre">&lt;matomo-pod&gt;</span> <span class="pre">/bin/bash</span></code> to
+get shell on the matomo container.</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">rm</span> <span class="pre">config/config.ini.php</span></code>.</p></li>
+<li><p>Visit the web interface &amp; complete installation. The database username &amp; password
+are available in the secret encrypted files in this repo. So is the admin username
+and password. This creates the database tables.</p></li>
+<li><p>When the setup is complete, delete the pod. This should bring up our <code class="docutils literal notranslate"><span class="pre">config.ini.php</span></code>
+file, and everything should work normally.</p></li>
+</ol>
+<p>This is not ideal.</p>
+</div>
+<div class="section" id="admin-access">
+<h2>Admin access<a class="headerlink" href="#admin-access" title="Permalink to this headline">¶</a></h2>
+<p>The admin username for Matomo is <code class="docutils literal notranslate"><span class="pre">admin</span></code>. You can find the password in
+<code class="docutils literal notranslate"><span class="pre">secret/staging.yaml</span></code> for staging &amp; <code class="docutils literal notranslate"><span class="pre">secret/prod.yaml</span></code> for prod.</p>
+</div>
+<div class="section" id="security">
+<h2>Security<a class="headerlink" href="#security" title="Permalink to this headline">¶</a></h2>
+<p>PHP code is notoriously hard to secure. Matomo has had security audits,
+so it’s not the worst. However, we should treat it with suspicion &amp;
+wall off as much of it away as possible. Arbitrary code execution
+vulnerabilities often happen in PHP, so we gotta use that as our
+security model.</p>
+<p>We currently have:</p>
+<ol class="arabic simple">
+<li><p>A firewall hole (in Google Cloud) allowing it access to the CloudSQL
+instance it needs to store data in. Only port 3307 (which is used by
+the OAuth2+ServiceAccount authenticated CloudSQLProxy) is open. This
+helps prevent random MySQL password grabbers from inside the cluster.</p></li>
+<li><p>A Kubernetes NetworkPolicy is in place that limits what outbound
+connections Matomo can make. This should be further tightened down -
+ingress should only be allowed on the nginx port from our ingress
+controllers.</p></li>
+<li><p>We do not mount a Kubernetes ServiceAccount in the Matomo pod. This
+denies it access to the KubernetesAPI.</p></li>
+</ol>
+</div>
+</div>
+
+
+          </div>
+   <div class='prev-next-bottom'>
+     
+      <a class='left-prev' href="cloud.html" title="previous chapter">Cloud products</a>
+      <a class='right-next' href="../analytics/events-archive.html" title="next chapter">The Analytics Events Archive</a>
+   <div style='clear:both;'></div>
+ 
+   </div>
+
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <p class="logo"><a href="../index.html">
+    <img class="logo" src="../_static/logo.jpg" alt="Logo"/>
+  </a></p>
+<h1 class="logo"><a href="../index.html">Site Reliability Guide for mybinder.org</a></h1>
+
+
+
+<p class="blurb">A Site Reliability Guide for mybinder.org deployment</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=jupyterhub&repo=binderhub&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<h3>Table of Contents</h3>
+<p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting started with the <code class="docutils literal notranslate"><span class="pre">mybinder.org</span></code> dev team</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../production_environment.html">Production environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../terminology.html">Terminology for the deployment</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Deployment</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/prereqs.html">Pre-requisite technologies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/how.html">How to deploy a change to mybinder.org?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/what.html">What does a MyBinder.org deployment do?</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Operation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../common_problems.html">Common problems and their solutions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../command_snippets.html">Command snippets used during operations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../grafana_plots.html">Some useful Grafana plots</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="metrics.html">Metrics collection with Prometheus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dashboards.html">Operational Dashboards with Grafana</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ingress.html">HTTPS ingress with nginx + kube-lego</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cloud.html">Cloud products</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Matomo (formerly Piwik) analytics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#why">Why?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#how-it-is-set-up">How it is set up?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#initial-installation">Initial Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#admin-access">Admin access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#security">Security</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../analytics/events-archive.html">The Analytics Events Archive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analytics/cloud-costs.html">Cloud Costs Data</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Incidents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2019-04-03-ingress-cordoned.html">2019-04-03, 30min outage during node pool upgrade</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2019-03-24-r2d-upgrade.html">2019-03-24, repo2docker upgrade and docker image cache wipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2019-02-20-no-logs.html">incident date: 2019-02-20, kubectl logs unavailable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-07-30-jupyterlab-build-cpu-saturate.html">2018-07-30 JupyterLab builds saturate BinderHub CPU</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-07-08-podsnips-aplenty.html">2018-07-08, too many pods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-04-18-cull-flood.html">2018-04-18, Culler flood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-03-31-server-start-fail.html">2018-03-31, Server launch failures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-03-26-no-space-left.html">2018-03-26, “no space left on device”</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-03-13-PVC-hub-locked.html">2018-03-13, PVC for hub is locked</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-02-22-nginx-down.html">2018-02-22 NGINX crash</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-02-20-jupyterlab-announcement.html">2018-02-20, JupyterLab Announcement swamps Binder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-02-12-launch-fail.html">2018-02-12, Hub Launch Fail</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-01-18-reddit-hug.html">2018-01-18, reddit hugs mybinder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-01-18-ssl-outdated.html">2018-01-11, Warning from letsencrypt about outdated SSL certificate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-01-17-ubuntu-upgrade.html">2018-01-17, Emergency Aardvark bump</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-01-04-failed-staging-deploy.html">2018-01-04, Failed deploy to staging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2017-11-30-oom-proxy.html">2017-11-30 4:23PM PST, OOM (Out of Memory) Proxy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2017-10-17-cluster-full.html">2017-10-17, Cluster Full</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2017-09-29-504.html">2017-09-29, 504</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2017-09-27-hub-403.html">2017-09-27, Hub 403</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/template-incident-report.html">Template for reports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/template-incident-report.html#incident-date-yyyy-mm-dd-incident-name">{{ incident date: yyyy-mm-dd }}, {{ incident name }}</a></li>
+</ul>
+
+
+<div class="relations">
+<h3>Navigation</h3>
+<ul>
+  <li><a href="../index.html">Documentation Home</a><ul>
+  <li><a href="cloud.html" title="Previous">Previous topic</a></li>
+  <li><a href="../analytics/events-archive.html" title="Next">Next topic</a></li>
+  </ul>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/components/matomo.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+        <form class="search" action="../search.html" method="get">
+            <input type="text" name="q" placeholder="Quick Search" aria-labelledby="searchlabel" />
+            <input type="submit" value="Go" />
+        </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017 - 2019, Binder Team.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/components/matomo.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

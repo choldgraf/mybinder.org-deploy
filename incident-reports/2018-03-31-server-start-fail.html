@@ -1,0 +1,310 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>2018-03-31, Server launch failures &#8212; Site Reliability Guide for mybinder.org 1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="2018-03-26, “no space left on device”" href="2018-03-26-no-space-left.html" />
+    <link rel="prev" title="2018-04-18, Culler flood" href="2018-04-18-cull-flood.html" />
+
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<!-- Add JupyterHub styling -->
+<link rel="stylesheet" href="../_static/jupyter.css" type="text/css" />
+<link rel="shortcut icon" href="../_static/favicon.ico"/>
+
+
+  </head><body>
+<div class="rightsidebar">
+    <h3>On this page</h3>
+    <ul>
+<li><a class="reference internal" href="#">2018-03-31, Server launch failures</a><ul>
+<li><a class="reference internal" href="#summary">Summary</a></li>
+<li><a class="reference internal" href="#timeline">Timeline</a><ul>
+<li><a class="reference internal" href="#">2018-03-31 15:47</a></li>
+<li><a class="reference internal" href="#">16:11</a></li>
+<li><a class="reference internal" href="#">17:21</a></li>
+<li><a class="reference internal" href="#">17:30</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#lessons-learnt">Lessons learnt</a><ul>
+<li><a class="reference internal" href="#what-went-well">What went well</a></li>
+<li><a class="reference internal" href="#what-went-wrong">What went wrong</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#action-items">Action items</a><ul>
+<li><a class="reference internal" href="#investigation">Investigation</a></li>
+<li><a class="reference internal" href="#what-went-wrong">What went wrong</a></li>
+<li><a class="reference internal" href="#process-improvements">Process improvements</a></li>
+<li><a class="reference internal" href="#documentation-improvements">Documentation improvements</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+   <div class='prev-next-top'>
+     
+      <a class='left-prev' href="2018-04-18-cull-flood.html" title="previous chapter">Previous</a>
+      <a class='right-next' href="2018-03-26-no-space-left.html" title="next chapter">Next</a>
+   <div style='clear:both;'></div>
+ 
+   </div>
+
+
+          <div class="body" role="main">
+            
+  <div class="section" id="server-launch-failures">
+<span id="server-launch-failures"></span><h1>2018-03-31, Server launch failures<a class="headerlink" href="#server-launch-failures" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="summary">
+<span id="summary"></span><h2>Summary<a class="headerlink" href="#summary" title="Permalink to this headline">¶</a></h2>
+<p>After a few days of general sub-optimal stability and some strange networking errors, a node was deleted. This caused a more general outage that was only solved by totally recycling all nodes.</p>
+<p><a class="reference external" href="https://gitter.im/jupyterhub/binder?at=5ac010032b9dfdbc3a421980">link to Gitter incident start</a></p>
+</div>
+<div class="section" id="timeline">
+<span id="timeline"></span><h2>Timeline<a class="headerlink" href="#timeline" title="Permalink to this headline">¶</a></h2>
+<p>All times in PST</p>
+<div class="section" id="">
+<span id="id1"></span><h3>2018-03-31 15:47<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Problem is identified</p>
+<ul class="simple">
+<li><p>Launch success rate drops quickly</p></li>
+<li><p>Many pods stuck in “Terminating” and “ContainerCreating” state.</p></li>
+<li><p>Hub pod is showing many timeout errors.</p></li>
+</ul>
+</div>
+<div class="section" id="">
+<span id="id2"></span><h3>16:11<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Mount errors on build pods:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Events</span><span class="p">:</span>
+  <span class="n">Type</span>     <span class="n">Reason</span>                 <span class="n">Age</span>                <span class="n">From</span>                                           <span class="n">Message</span>
+  <span class="o">----</span>     <span class="o">------</span>                 <span class="o">----</span>               <span class="o">----</span>                                           <span class="o">-------</span>
+  <span class="n">Normal</span>   <span class="n">Scheduled</span>              <span class="mi">5</span><span class="n">m</span>                 <span class="n">default</span><span class="o">-</span><span class="n">scheduler</span>                              <span class="n">Successfully</span> <span class="n">assigned</span> <span class="n">build</span><span class="o">-</span><span class="n">devvyn</span><span class="o">-</span><span class="mi">2</span><span class="n">daafc</span><span class="o">-</span><span class="mi">2</span><span class="n">dfield</span><span class="o">-</span><span class="mi">2</span><span class="n">ddata</span><span class="o">-</span><span class="mf">6e8479</span><span class="o">-</span><span class="n">c1cecc</span> <span class="n">to</span> <span class="n">gke</span><span class="o">-</span><span class="n">prod</span><span class="o">-</span><span class="n">a</span><span class="o">-</span><span class="n">ssd</span><span class="o">-</span><span class="n">pool</span><span class="o">-</span><span class="mi">32</span><span class="o">-</span><span class="mi">134</span><span class="n">a959a</span><span class="o">-</span><span class="n">p2kz</span>
+  <span class="n">Normal</span>   <span class="n">SuccessfulMountVolume</span>  <span class="mi">5</span><span class="n">m</span>                 <span class="n">kubelet</span><span class="p">,</span> <span class="n">gke</span><span class="o">-</span><span class="n">prod</span><span class="o">-</span><span class="n">a</span><span class="o">-</span><span class="n">ssd</span><span class="o">-</span><span class="n">pool</span><span class="o">-</span><span class="mi">32</span><span class="o">-</span><span class="mi">134</span><span class="n">a959a</span><span class="o">-</span><span class="n">p2kz</span>  <span class="n">MountVolume</span><span class="o">.</span><span class="n">SetUp</span> <span class="n">succeeded</span> <span class="k">for</span> <span class="n">volume</span> <span class="s2">&quot;docker-socket&quot;</span>
+  <span class="ne">Warning</span>  <span class="n">FailedMount</span>            <span class="mi">4</span><span class="n">m</span> <span class="p">(</span><span class="n">x8</span> <span class="n">over</span> <span class="mi">5</span><span class="n">m</span><span class="p">)</span>    <span class="n">kubelet</span><span class="p">,</span> <span class="n">gke</span><span class="o">-</span><span class="n">prod</span><span class="o">-</span><span class="n">a</span><span class="o">-</span><span class="n">ssd</span><span class="o">-</span><span class="n">pool</span><span class="o">-</span><span class="mi">32</span><span class="o">-</span><span class="mi">134</span><span class="n">a959a</span><span class="o">-</span><span class="n">p2kz</span>  <span class="n">MountVolume</span><span class="o">.</span><span class="n">SetUp</span> <span class="n">failed</span> <span class="k">for</span> <span class="n">volume</span> <span class="s2">&quot;docker-push-secret&quot;</span> <span class="p">:</span> <span class="n">mkdir</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">kubelet</span><span class="o">/</span><span class="n">pods</span><span class="o">/</span><span class="n">e8d31d4e</span><span class="o">-</span><span class="mi">3537</span><span class="o">-</span><span class="mf">11e8</span><span class="o">-</span><span class="mi">88</span><span class="n">bf</span><span class="o">-</span><span class="mi">42010</span><span class="n">a800059</span><span class="p">:</span> <span class="n">read</span><span class="o">-</span><span class="n">only</span> <span class="n">file</span> <span class="n">system</span>
+  <span class="ne">Warning</span>  <span class="n">FailedMount</span>            <span class="mi">4</span><span class="n">m</span> <span class="p">(</span><span class="n">x8</span> <span class="n">over</span> <span class="mi">5</span><span class="n">m</span><span class="p">)</span>    <span class="n">kubelet</span><span class="p">,</span> <span class="n">gke</span><span class="o">-</span><span class="n">prod</span><span class="o">-</span><span class="n">a</span><span class="o">-</span><span class="n">ssd</span><span class="o">-</span><span class="n">pool</span><span class="o">-</span><span class="mi">32</span><span class="o">-</span><span class="mi">134</span><span class="n">a959a</span><span class="o">-</span><span class="n">p2kz</span>  <span class="n">MountVolume</span><span class="o">.</span><span class="n">SetUp</span> <span class="n">failed</span> <span class="k">for</span> <span class="n">volume</span> <span class="s2">&quot;default-token-ftskg&quot;</span> <span class="p">:</span> <span class="n">mkdir</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">kubelet</span><span class="o">/</span><span class="n">pods</span><span class="o">/</span><span class="n">e8d31d4e</span><span class="o">-</span><span class="mi">3537</span><span class="o">-</span><span class="mf">11e8</span><span class="o">-</span><span class="mi">88</span><span class="n">bf</span><span class="o">-</span><span class="mi">42010</span><span class="n">a800059</span><span class="p">:</span> <span class="n">read</span><span class="o">-</span><span class="n">only</span> <span class="n">file</span> <span class="n">system</span>
+  <span class="ne">Warning</span>  <span class="n">FailedSync</span>             <span class="mi">55</span><span class="n">s</span> <span class="p">(</span><span class="n">x24</span> <span class="n">over</span> <span class="mi">5</span><span class="n">m</span><span class="p">)</span>  <span class="n">kubelet</span><span class="p">,</span> <span class="n">gke</span><span class="o">-</span><span class="n">prod</span><span class="o">-</span><span class="n">a</span><span class="o">-</span><span class="n">ssd</span><span class="o">-</span><span class="n">pool</span><span class="o">-</span><span class="mi">32</span><span class="o">-</span><span class="mi">134</span><span class="n">a959a</span><span class="o">-</span><span class="n">p2kz</span>  <span class="n">Error</span> <span class="n">syncing</span> <span class="n">pod</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="">
+<span id="id3"></span><h3>17:21<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Decided to increase cluster size to 4, wait for new nodes to come up, then cordon the two older nodes</p></li>
+</ul>
+</div>
+<div class="section" id="">
+<span id="id4"></span><h3>17:30<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>New nodes are up, old nodes are drained</p></li>
+<li><p>Hub / binder pods show up on new nodes</p></li>
+<li><p>Launch success rate begins increasing</p></li>
+<li><p>Launch rate goes back to 100%</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="lessons-learnt">
+<span id="lessons-learnt"></span><h2>Lessons learnt<a class="headerlink" href="#lessons-learnt" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="what-went-well">
+<span id="what-went-well"></span><h3>What went well<a class="headerlink" href="#what-went-well" title="Permalink to this headline">¶</a></h3>
+<ol class="simple">
+<li><p>The problem was eventually resolved</p></li>
+</ol>
+</div>
+<div class="section" id="what-went-wrong">
+<span id="what-went-wrong"></span><h3>What went wrong<a class="headerlink" href="#what-went-wrong" title="Permalink to this headline">¶</a></h3>
+<ol class="simple">
+<li><p>It was difficult to debug this problem as there was no obvious error message, and the person solving the problem wasn’t sure how to debug.</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="action-items">
+<span id="action-items"></span><h2>Action items<a class="headerlink" href="#action-items" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="investigation">
+<span id="investigation"></span><h3>Investigation<a class="headerlink" href="#investigation" title="Permalink to this headline">¶</a></h3>
+<p>The outage seemed to come from the deletion of a node, but it seemed to be related to other pre-existing nodes as well. Perhaps this is a general thing that happens when nodes become too old?</p>
+</div>
+<div class="section" id="what-went-wrong">
+<span id="id5"></span><h3>What went wrong<a class="headerlink" href="#what-went-wrong" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>There was a major outage that we were unable to debug, there were not clear errors in the logs</p></li>
+<li><p>There was only one person available to debug, which made it more difficult to know how to proceed withot any feedback</p></li>
+</ul>
+</div>
+<div class="section" id="process-improvements">
+<span id="process-improvements"></span><h3>Process improvements<a class="headerlink" href="#process-improvements" title="Permalink to this headline">¶</a></h3>
+<ol class="simple">
+<li><p>Improve the alerting so that a majority of the team is notified when there’s an outage. (currently blocking on <a class="reference external" href="https://github.com/jupyterhub/mybinder.org-deploy/issues/365">#365</a>)</p></li>
+<li><p>Come up with team guidelines for how “stale” a node can become before we intentionally recycle it. (<a class="reference external" href="https://github.com/jupyterhub/mybinder.org-deploy/issues/528">#528</a>)</p></li>
+</ol>
+</div>
+<div class="section" id="documentation-improvements">
+<span id="documentation-improvements"></span><h3>Documentation improvements<a class="headerlink" href="#documentation-improvements" title="Permalink to this headline">¶</a></h3>
+<ol class="simple">
+<li><p>Document how to “recycle” nodes properly (<a class="reference external" href="https://github.com/jupyterhub/mybinder.org-deploy/issues/528">#528</a>)</p></li>
+</ol>
+</div>
+</div>
+</div>
+
+
+          </div>
+   <div class='prev-next-bottom'>
+     
+      <a class='left-prev' href="2018-04-18-cull-flood.html" title="previous chapter">2018-04-18, Culler flood</a>
+      <a class='right-next' href="2018-03-26-no-space-left.html" title="next chapter">2018-03-26, “no space left on device”</a>
+   <div style='clear:both;'></div>
+ 
+   </div>
+
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <p class="logo"><a href="../index.html">
+    <img class="logo" src="../_static/logo.jpg" alt="Logo"/>
+  </a></p>
+<h1 class="logo"><a href="../index.html">Site Reliability Guide for mybinder.org</a></h1>
+
+
+
+<p class="blurb">A Site Reliability Guide for mybinder.org deployment</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=jupyterhub&repo=binderhub&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<h3>Table of Contents</h3>
+<p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting started with the <code class="docutils literal notranslate"><span class="pre">mybinder.org</span></code> dev team</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../production_environment.html">Production environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../terminology.html">Terminology for the deployment</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Deployment</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/prereqs.html">Pre-requisite technologies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/how.html">How to deploy a change to mybinder.org?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/what.html">What does a MyBinder.org deployment do?</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Operation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../common_problems.html">Common problems and their solutions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../command_snippets.html">Command snippets used during operations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../grafana_plots.html">Some useful Grafana plots</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../components/metrics.html">Metrics collection with Prometheus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/dashboards.html">Operational Dashboards with Grafana</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/ingress.html">HTTPS ingress with nginx + kube-lego</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/cloud.html">Cloud products</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/matomo.html">Matomo (formerly Piwik) analytics</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../analytics/events-archive.html">The Analytics Events Archive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analytics/cloud-costs.html">Cloud Costs Data</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Incidents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="2019-04-03-ingress-cordoned.html">2019-04-03, 30min outage during node pool upgrade</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2019-03-24-r2d-upgrade.html">2019-03-24, repo2docker upgrade and docker image cache wipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2019-02-20-no-logs.html">incident date: 2019-02-20, kubectl logs unavailable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-07-30-jupyterlab-build-cpu-saturate.html">2018-07-30 JupyterLab builds saturate BinderHub CPU</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-07-08-podsnips-aplenty.html">2018-07-08, too many pods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-04-18-cull-flood.html">2018-04-18, Culler flood</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">2018-03-31, Server launch failures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-03-26-no-space-left.html">2018-03-26, “no space left on device”</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-03-13-PVC-hub-locked.html">2018-03-13, PVC for hub is locked</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-02-22-nginx-down.html">2018-02-22 NGINX crash</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-02-20-jupyterlab-announcement.html">2018-02-20, JupyterLab Announcement swamps Binder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-02-12-launch-fail.html">2018-02-12, Hub Launch Fail</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-01-18-reddit-hug.html">2018-01-18, reddit hugs mybinder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-01-18-ssl-outdated.html">2018-01-11, Warning from letsencrypt about outdated SSL certificate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-01-17-ubuntu-upgrade.html">2018-01-17, Emergency Aardvark bump</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-01-04-failed-staging-deploy.html">2018-01-04, Failed deploy to staging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2017-11-30-oom-proxy.html">2017-11-30 4:23PM PST, OOM (Out of Memory) Proxy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2017-10-17-cluster-full.html">2017-10-17, Cluster Full</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2017-09-29-504.html">2017-09-29, 504</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2017-09-27-hub-403.html">2017-09-27, Hub 403</a></li>
+<li class="toctree-l1"><a class="reference internal" href="template-incident-report.html">Template for reports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="template-incident-report.html#incident-date-yyyy-mm-dd-incident-name">{{ incident date: yyyy-mm-dd }}, {{ incident name }}</a></li>
+</ul>
+
+
+<div class="relations">
+<h3>Navigation</h3>
+<ul>
+  <li><a href="../index.html">Documentation Home</a><ul>
+  <li><a href="2018-04-18-cull-flood.html" title="Previous">Previous topic</a></li>
+  <li><a href="2018-03-26-no-space-left.html" title="Next">Next topic</a></li>
+  </ul>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/incident-reports/2018-03-31-server-start-fail.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+        <form class="search" action="../search.html" method="get">
+            <input type="text" name="q" placeholder="Quick Search" aria-labelledby="searchlabel" />
+            <input type="submit" value="Go" />
+        </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017 - 2019, Binder Team.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/incident-reports/2018-03-31-server-start-fail.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

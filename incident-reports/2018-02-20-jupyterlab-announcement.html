@@ -1,0 +1,623 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>2018-02-20, JupyterLab Announcement swamps Binder &#8212; Site Reliability Guide for mybinder.org 1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="2018-02-12, Hub Launch Fail" href="2018-02-12-launch-fail.html" />
+    <link rel="prev" title="2018-02-22 NGINX crash" href="2018-02-22-nginx-down.html" />
+
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<!-- Add JupyterHub styling -->
+<link rel="stylesheet" href="../_static/jupyter.css" type="text/css" />
+<link rel="shortcut icon" href="../_static/favicon.ico"/>
+
+
+  </head><body>
+<div class="rightsidebar">
+    <h3>On this page</h3>
+    <ul>
+<li><a class="reference internal" href="#">2018-02-20, JupyterLab Announcement swamps Binder</a><ul>
+<li><a class="reference internal" href="#summary">Summary</a></li>
+<li><a class="reference internal" href="#timeline">Timeline</a><ul>
+<li><a class="reference internal" href="#feb-20-2018-14-17">Feb 20 2018 14:17</a></li>
+<li><a class="reference internal" href="#">14:55</a></li>
+<li><a class="reference internal" href="#">15:05</a></li>
+<li><a class="reference internal" href="#">15:08</a></li>
+<li><a class="reference internal" href="#">15:10</a></li>
+<li><a class="reference internal" href="#">15:15</a></li>
+<li><a class="reference internal" href="#">15:20</a></li>
+<li><a class="reference internal" href="#">15:32</a></li>
+<li><a class="reference internal" href="#">16:00</a></li>
+<li><a class="reference internal" href="#">16:05</a></li>
+<li><a class="reference internal" href="#">16:18</a></li>
+<li><a class="reference internal" href="#">16:29</a></li>
+<li><a class="reference internal" href="#">16:33</a></li>
+<li><a class="reference internal" href="#">16:40</a></li>
+<li><a class="reference internal" href="#">16:55</a></li>
+<li><a class="reference internal" href="#">17:00-18:00</a></li>
+<li><a class="reference internal" href="#">18:03</a></li>
+<li><a class="reference internal" href="#">18:10</a></li>
+<li><a class="reference internal" href="#">18:22</a></li>
+<li><a class="reference internal" href="#">18:30</a></li>
+<li><a class="reference internal" href="#">18:37</a></li>
+<li><a class="reference internal" href="#">18:40</a></li>
+<li><a class="reference internal" href="#">19:00</a></li>
+<li><a class="reference internal" href="#">19:33</a></li>
+<li><a class="reference internal" href="#">19:35</a></li>
+<li><a class="reference internal" href="#">19:40</a></li>
+<li><a class="reference internal" href="#">19:42</a></li>
+<li><a class="reference internal" href="#">19:45</a></li>
+<li><a class="reference internal" href="#">19:52</a></li>
+<li><a class="reference internal" href="#x-xx-not-sure-exact-time">2X:XX (not sure exact time)</a></li>
+<li><a class="reference internal" href="#">21:57</a></li>
+<li><a class="reference internal" href="#">22:12</a></li>
+<li><a class="reference internal" href="#">22:30</a></li>
+<li><a class="reference internal" href="#">22:43</a></li>
+<li><a class="reference internal" href="#">22:44</a></li>
+<li><a class="reference internal" href="#maybe-earlier">22:52 (maybe earlier?)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#feb-21-13-00">Feb 21, 13:00</a><ul>
+<li><a class="reference internal" href="#">15:15</a></li>
+<li><a class="reference internal" href="#">16:20</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#feb-22-07-13">Feb 22, 07:13</a><ul>
+<li><a class="reference internal" href="#">07:18</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#conclusions">Conclusions</a></li>
+<li><a class="reference internal" href="#action-items">Action Items</a><ul>
+<li><a class="reference internal" href="#jupyterhub">JupyterHub</a></li>
+<li><a class="reference internal" href="#zero-to-jupyterhub">Zero-to-JupyterHub</a></li>
+<li><a class="reference internal" href="#binderhub">BinderHub</a></li>
+<li><a class="reference internal" href="#deployment">Deployment</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+   <div class='prev-next-top'>
+     
+      <a class='left-prev' href="2018-02-22-nginx-down.html" title="previous chapter">Previous</a>
+      <a class='right-next' href="2018-02-12-launch-fail.html" title="next chapter">Next</a>
+   <div style='clear:both;'></div>
+ 
+   </div>
+
+
+          <div class="body" role="main">
+            
+  <div class="section" id="jupyterlab-announcement-swamps-binder">
+<span id="jupyterlab-announcement-swamps-binder"></span><h1>2018-02-20, JupyterLab Announcement swamps Binder<a class="headerlink" href="#jupyterlab-announcement-swamps-binder" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="summary">
+<span id="summary"></span><h2>Summary<a class="headerlink" href="#summary" title="Permalink to this headline">¶</a></h2>
+<p>The JupyterLab <a class="reference external" href="https://blog.jupyter.org/jupyterlab-is-ready-for-users-5a6f039b8906">announcement post</a> drove a great deal of traffic to mybinder.org.
+This caused several outages throughout the day from varying causes.</p>
+<p>We prepared for this by temporarily increasing the mininum number of nodes.</p>
+<p>After a deployment, most users were getting “Failed to create temporary user for gcr.io/binder-prod/” when attempting to launch their image. This was caused by a small bug that manifests only when large numbers of users are using Binder at the same time. The bug was identified and fixed, but due to logistical issues it caused mybinder to be unusable for about 1h50m, and unstable for ~1 day.</p>
+</div>
+<div class="section" id="timeline">
+<span id="timeline"></span><h2>Timeline<a class="headerlink" href="#timeline" title="Permalink to this headline">¶</a></h2>
+<p>All times in CET (GMT+1)</p>
+<div class="section" id="feb-20-2018-14-17">
+<span id="feb-20-2018-14-17"></span><h3>Feb 20 2018 14:17<a class="headerlink" href="#feb-20-2018-14-17" title="Permalink to this headline">¶</a></h3>
+<p>JupyterLab announcement blog post goes live via medium, twitter. At this point, the per-repo limit is 300.</p>
+</div>
+<div class="section" id="">
+<span id="id1"></span><h3>14:55<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Autoscaling increases node count to 4 from 3 as intended. This results in a
+slight increase in launch backlog while the new node is prepared (and the
+jupyterlab image is pulled)</p>
+</div>
+<div class="section" id="">
+<span id="id2"></span><h3>15:05<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Autoscaling increases node count to 5. JupyterLab is very popular! Grafana
+shows that JupyterLab is heading very quickly for the 300 limit. It is decided
+to raise the per-repo limit to 500.</p>
+</div>
+<div class="section" id="">
+<span id="id3"></span><h3>15:08<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>JupyterLab hits the rate limit of 300 and Grafana starts listing failed builds
+due to the per-repo limit. The rate limit is behaving as intended.</p>
+<p>[Action Item] launches that are rejected due to rate limiting are registered as a
+‘failed launch’ in our launch success metric. This should instead be its own label.</p>
+</div>
+<div class="section" id="">
+<span id="id4"></span><h3>15:10<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference external" href="https://github.com/jupyterhub/mybinder.org-deploy/pull/428">PR #428</a> increases the per-repo limit to 500.</p>
+</div>
+<div class="section" id="">
+<span id="id5"></span><h3>15:15<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Deployment of PR #428 to production fails on Travis due to a timeout waiting for <code class="docutils literal notranslate"><span class="pre">helm</span> <span class="pre">upgrade</span></code> on prod. The <code class="docutils literal notranslate"><span class="pre">binder</span></code> pod never became available.</p>
+<p>The travis deployment is restarted.</p>
+</div>
+<div class="section" id="">
+<span id="id6"></span><h3>15:20<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Travis deployment fails again, this time hanging during grafana annotation.
+It is discovered that the grafana pod is unhealthy:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ kubectl describe pod grafana...
+Events:
+  Type     Reason          Age              From                                           Message
+  ----     ------          ----             ----                                           -------
+  Warning  Unhealthy       2m               kubelet, gke-prod-a-ssd-pool-32-134a959a-vvsw  Readiness probe failed: Get http://10.12.8.137:3000/login: dial tcp 10.12.8.137:3000: getsockopt: connection refused
+  Warning  FailedSync      2m               kubelet, gke-prod-a-ssd-pool-32-134a959a-vvsw  Error syncing pod
+  Warning  Failed          2m               kubelet, gke-prod-a-ssd-pool-32-134a959a-vvsw  Error: failed to start container &quot;grafana&quot;: Error response from daemon: cannot join network of a non running container: 8babe89dbb28ea4c09f5490797b8bb2bd4e6298a8d79a04b8653febed86fec19
+  Warning  Unhealthy       1m               kubelet, gke-prod-a-ssd-pool-32-134a959a-vvsw  Readiness probe failed: Get http://10.12.8.137:3000/login: net/http: request canceled while waiting for connection (Client.Timeout exceeded while awaiting headers)
+  Normal   SandboxChanged  1m               kubelet, gke-prod-a-ssd-pool-32-134a959a-vvsw  Pod sandbox changed, it will be killed and re-created.
+  Normal   Pulling         1m (x4 over 4h)  kubelet, gke-prod-a-ssd-pool-32-134a959a-vvsw  pulling image &quot;grafana/grafana:4.6.3&quot;
+  Normal   Pulled          1m (x4 over 4h)  kubelet, gke-prod-a-ssd-pool-32-134a959a-vvsw  Successfully pulled image &quot;grafana/grafana:4.6.3&quot;
+  Normal   Started         1m (x3 over 4h)  kubelet, gke-prod-a-ssd-pool-32-134a959a-vvsw  Started container
+  Normal   Created         1m (x4 over 4h)  kubelet, gke-prod-a-ssd-pool-32-134a959a-vvsw  Created container
+</pre></div>
+</div>
+<p>The grafana pod is deleted, as is the <code class="docutils literal notranslate"><span class="pre">binder</span></code> pod that failed to start.</p>
+</div>
+<div class="section" id="">
+<span id="id7"></span><h3>15:32<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Travis is retried once more, and succeeds this time.</p>
+<p>Launch success begins to climb as JupyterLab pods rise from 300 to the new limit of 500.</p>
+<p>Grafana pod dies and is restarted multiple times. This time by Kubernetes without intervention.</p>
+</div>
+<div class="section" id="">
+<span id="id8"></span><h3>16:00<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>JupyterLab has hit the 500 user limit and is  ?????
+After returning to working order, ????</p>
+</div>
+<div class="section" id="">
+<span id="id9"></span><h3>16:05<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Launch success rate is at 0%. Something is wrong beyond load.</p>
+</div>
+<div class="section" id="">
+<span id="id10"></span><h3>16:18<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Hub is restarted to attempt to clear out bad state via <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">delete</span> <span class="pre">pod</span></code></p>
+<p>The hub comes back and promptly culls many inactive pods. However, there appears to be a problem in the culler itself. Every cull request fails due to 400 requests asking for an already-stopping server to stop again, resulting in the culler exiting. <strong>The culler shouldn’t exit when there is an error</strong></p>
+</div>
+<div class="section" id="">
+<span id="id11"></span><h3>16:29<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>restart both hub and proxy pods</p>
+<p>Everything’s still failing. Binder requests to the Hub are failing with a timeout:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">E</span> <span class="mi">180220</span> <span class="mi">15</span><span class="p">:</span><span class="mi">32</span><span class="p">:</span><span class="mi">35</span> <span class="n">launcher</span><span class="p">:</span><span class="mi">93</span><span class="p">]</span> <span class="n">Error</span> <span class="n">creating</span> <span class="n">user</span> <span class="n">jupyterlab</span><span class="o">-</span><span class="n">jupyterlab</span><span class="o">-</span><span class="n">demo</span><span class="o">-</span><span class="n">gjvedw6o</span><span class="p">:</span> <span class="n">HTTP</span> <span class="mi">599</span><span class="p">:</span> <span class="n">Timeout</span> <span class="k">while</span> <span class="n">connecting</span>
+
+<span class="p">[</span><span class="n">W</span> <span class="mi">180220</span> <span class="mi">15</span><span class="p">:</span><span class="mi">32</span><span class="p">:</span><span class="mi">35</span> <span class="n">web</span><span class="p">:</span><span class="mi">1588</span><span class="p">]</span> <span class="mi">500</span> <span class="n">GET</span> <span class="o">/</span><span class="n">build</span><span class="o">/</span><span class="n">gh</span><span class="o">/</span><span class="n">jupyterlab</span><span class="o">/</span><span class="n">jupyterlab</span><span class="o">-</span><span class="n">demo</span><span class="o">/</span><span class="mi">18</span><span class="n">a9793b58ba86660b5ab964e1aeaf7324d667c8</span> <span class="p">(</span><span class="mf">10.12</span><span class="o">.</span><span class="mf">8.27</span><span class="p">):</span> <span class="n">Failed</span> <span class="n">to</span> <span class="n">create</span> <span class="n">temporary</span> <span class="n">user</span> <span class="k">for</span> <span class="n">gcr</span><span class="o">.</span><span class="n">io</span><span class="o">/</span><span class="n">binder</span><span class="o">-</span><span class="n">prod</span><span class="o">/</span><span class="n">r2d</span><span class="o">-</span><span class="n">fd74043jupyterlab</span><span class="o">-</span><span class="n">jupyterlab</span><span class="o">-</span><span class="n">demo</span><span class="p">:</span><span class="mi">18</span><span class="n">a9793b58ba86660b5ab964e1aeaf7324d667c8</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="">
+<span id="id12"></span><h3>16:33<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>BinderHub is restarted, in case there is an issue in BinderHub itself.</p>
+<p>After this restart, launches begin to succeed again. It appears that BinderHub was unable to talk to JupyterHub. It could be that the tornado connection pool was draining (this has happened before due to <a class="reference external" href="https://github.com/tornadoweb/tornado/pull/1582">a tornado bug</a>).</p>
+<p>It could also have been a kubernetes networking issue where pod-networking is no longer working.</p>
+</div>
+<div class="section" id="">
+<span id="id13"></span><h3>16:40<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Grafana pod restarted itself again. No indication as to why, but it could just be being reassigned to new nodes as the cluster resizes.</p>
+<p>In hindsight, it is most likely because it only requests 100Mi of RAM and nothing more.</p>
+</div>
+<div class="section" id="">
+<span id="id14"></span><h3>16:55<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Launches begin failing again with the same 599: Timeout errors</p>
+</div>
+<div class="section" id="">
+<span id="id15"></span><h3>17:00-18:00<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Since BinderHub is reaching a timeout after several requests to the hub have accumulated</p>
+</div>
+<div class="section" id="">
+<span id="id16"></span><h3>18:03<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>cull jupyterlab pods older than 2 hours (103 pods)</p></li>
+<li><p>install pycurl on binderhub, which has been known to fix some timeout issues on jupyterhub underload</p></li>
+<li><p>revert per-repo limit back to 300 pods</p></li>
+</ul>
+</div>
+<div class="section" id="">
+<span id="id17"></span><h3>18:10<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Travis deployment <a class="reference external" href="https://travis-ci.org/jupyterhub/mybinder.org-deploy/builds/343924455">fails tests on prod</a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">test_hub_up</span><span class="p">(</span><span class="n">hub_url</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        JupyterHub url is up and returning sensible result (403)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">hub_url</span><span class="p">)</span>
+        <span class="c1"># 403 is expected since we are using nullauthenticator</span>
+        <span class="c1"># FIXME: Have a dedicated health check endpoint for the hub</span>
+<span class="o">&gt;</span>       <span class="k">assert</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">403</span>
+<span class="n">E</span>       <span class="k">assert</span> <span class="mi">504</span> <span class="o">==</span> <span class="mi">403</span>
+<span class="n">E</span>        <span class="o">+</span>  <span class="n">where</span> <span class="mi">504</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">Response</span> <span class="p">[</span><span class="mi">504</span><span class="p">]</span><span class="o">&gt;.</span><span class="n">status_code</span>
+</pre></div>
+</div>
+<p>due to networking failure on a node, but we don’t know that yet.</p>
+<p>(Note: I suspect this is due to JupyterHub being too busy, not because of node failure)</p>
+</div>
+<div class="section" id="">
+<span id="id18"></span><h3>18:22<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>pycurl PR is reverted due to suspicion that it caused Service Unavailable errors.
+It turns out this is not the case, the Hub really was unavailable due to bad networking state on at least one node.</p>
+<p>Hub logs show:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">E</span> <span class="mi">2018</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">20</span> <span class="mi">17</span><span class="p">:</span><span class="mi">18</span><span class="p">:</span><span class="mf">21.889</span> <span class="n">JupyterHub</span> <span class="n">app</span><span class="p">:</span><span class="mi">1623</span><span class="p">]</span>
+    <span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
+      <span class="n">File</span> <span class="s2">&quot;/usr/local/lib/python3.6/dist-packages/jupyterhub/app.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1620</span><span class="p">,</span> <span class="ow">in</span> <span class="n">launch_instance_async</span>
+        <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">argv</span><span class="p">)</span>
+      <span class="n">File</span> <span class="s2">&quot;/usr/lib/python3.6/types.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">184</span><span class="p">,</span> <span class="ow">in</span> <span class="n">throw</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__wrapped</span><span class="o">.</span><span class="n">throw</span><span class="p">(</span><span class="n">tp</span><span class="p">,</span> <span class="o">*</span><span class="n">rest</span><span class="p">)</span>
+      <span class="n">File</span> <span class="s2">&quot;/usr/local/lib/python3.6/dist-packages/jupyterhub/app.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1382</span><span class="p">,</span> <span class="ow">in</span> <span class="n">initialize</span>
+        <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_spawners</span><span class="p">()</span>
+      <span class="n">File</span> <span class="s2">&quot;/usr/local/lib/python3.6/dist-packages/jupyterhub/app.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1210</span><span class="p">,</span> <span class="ow">in</span> <span class="n">init_spawners</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">[</span><span class="n">orm_user</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="n">orm_user</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tornado_settings</span><span class="p">)</span>
+      <span class="n">File</span> <span class="s2">&quot;/usr/local/lib/python3.6/dist-packages/jupyterhub/user.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">178</span><span class="p">,</span> <span class="ow">in</span> <span class="fm">__init__</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spawners</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new_spawner</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+      <span class="n">File</span> <span class="s2">&quot;/usr/local/lib/python3.6/dist-packages/jupyterhub/user.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">208</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_new_spawner</span>
+        <span class="n">spawner</span> <span class="o">=</span> <span class="n">spawner_class</span><span class="p">(</span><span class="o">**</span><span class="n">spawn_kwargs</span><span class="p">)</span>
+      <span class="n">File</span> <span class="s2">&quot;/usr/local/lib/python3.6/dist-packages/kubespawner/spawner.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">83</span><span class="p">,</span> <span class="ow">in</span> <span class="fm">__init__</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">api</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">CoreV1Api</span><span class="p">()</span>
+      <span class="n">File</span> <span class="s2">&quot;/usr/local/lib/python3.6/dist-packages/kubernetes/client/apis/core_v1_api.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">35</span><span class="p">,</span> <span class="ow">in</span> <span class="fm">__init__</span>
+        <span class="n">api_client</span> <span class="o">=</span> <span class="n">ApiClient</span><span class="p">()</span>
+      <span class="n">File</span> <span class="s2">&quot;/usr/local/lib/python3.6/dist-packages/kubernetes/client/api_client.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">67</span><span class="p">,</span> <span class="ow">in</span> <span class="fm">__init__</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pool</span> <span class="o">=</span> <span class="n">ThreadPool</span><span class="p">()</span>
+      <span class="n">File</span> <span class="s2">&quot;/usr/lib/python3.6/multiprocessing/pool.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">789</span><span class="p">,</span> <span class="ow">in</span> <span class="fm">__init__</span>
+        <span class="n">Pool</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">processes</span><span class="p">,</span> <span class="n">initializer</span><span class="p">,</span> <span class="n">initargs</span><span class="p">)</span>
+      <span class="n">File</span> <span class="s2">&quot;/usr/lib/python3.6/multiprocessing/pool.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">174</span><span class="p">,</span> <span class="ow">in</span> <span class="fm">__init__</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_repopulate_pool</span><span class="p">()</span>
+      <span class="n">File</span> <span class="s2">&quot;/usr/lib/python3.6/multiprocessing/pool.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">239</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_repopulate_pool</span>
+        <span class="n">w</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+      <span class="n">File</span> <span class="s2">&quot;/usr/lib/python3.6/multiprocessing/dummy/__init__.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">48</span><span class="p">,</span> <span class="ow">in</span> <span class="n">start</span>
+        <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+      <span class="n">File</span> <span class="s2">&quot;/usr/lib/python3.6/threading.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">846</span><span class="p">,</span> <span class="ow">in</span> <span class="n">start</span>
+        <span class="n">_start_new_thread</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_bootstrap</span><span class="p">,</span> <span class="p">())</span>
+    <span class="ne">RuntimeError</span><span class="p">:</span> <span class="n">can</span><span class="s1">&#39;t start new thread</span>
+</pre></div>
+</div>
+<p>Node cordoned, as it is suspected to be the culprit. Hub pod is deleted to be reassigned to a new node</p>
+</div>
+<div class="section" id="">
+<span id="id19"></span><h3>18:30<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>to help recover, user pods older than one hour are deleted</p>
+</div>
+<div class="section" id="">
+<span id="id20"></span><h3>18:37<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>nothing is responding to requests anymore, including prometheus, grafana, hub, binder. ingress controller pods are deleted to try to help. It helps!</p>
+<p>Previously cordoned node is drained, as it is suspected of causing widespread outage.</p>
+</div>
+<div class="section" id="">
+<span id="id21"></span><h3>18:40<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Launch success rate is back to 100% after ~1hr of total downtime and ~4 hours of diminished capacity.</p>
+</div>
+<div class="section" id="">
+<span id="id22"></span><h3>19:00<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>JupyterLab pods once again reach 300 user limit. Things seem to behave as intended at this point.</p>
+</div>
+<div class="section" id="">
+<span id="id23"></span><h3>19:33<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>The repo quota is bumped to 303 in order to see if we can handle deployments under heavy load.</p>
+</div>
+<div class="section" id="">
+<span id="id24"></span><h3>19:35<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Notice that the launch rate now begins falling strongly</p>
+</div>
+<div class="section" id="">
+<span id="id25"></span><h3>19:40<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Note that logs show many <code class="docutils literal notranslate"><span class="pre">Failed</span> <span class="pre">to</span> <span class="pre">create</span> <span class="pre">temporary</span> <span class="pre">user</span> <span class="pre">for</span></code> errors</p>
+</div>
+<div class="section" id="">
+<span id="id26"></span><h3>19:42<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">binder-</span></code> logs also show <code class="docutils literal notranslate"><span class="pre">Error</span> <span class="pre">creating</span> <span class="pre">user</span> <span class="pre">jupyterlab-jupyterlab-demo-7qptz8ws:</span> <span class="pre">HTTP</span> <span class="pre">599:</span> <span class="pre">Connection</span> <span class="pre">timed</span> <span class="pre">out</span></code>
+Also note that Grafana launch percentile plot has stopped reporting</p>
+</div>
+<div class="section" id="">
+<span id="id27"></span><h3>19:45<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Delete the Binder pod: <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">delete</span> <span class="pre">pod</span> <span class="pre">--namespace=prod</span> <span class="pre">binder-66fcc59fb9-58btx</span></code></p>
+</div>
+<div class="section" id="">
+<span id="id28"></span><h3>19:52<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Note that Grafana launch percentile plot is back, launch success rate is back up. <code class="docutils literal notranslate"><span class="pre">binder-</span></code> pod is stable.</p>
+</div>
+<div class="section" id="x-xx-not-sure-exact-time">
+<span id="x-xx-not-sure-exact-time"></span><h3>2X:XX (not sure exact time)<a class="headerlink" href="#x-xx-not-sure-exact-time" title="Permalink to this headline">¶</a></h3>
+<p>Same <code class="docutils literal notranslate"><span class="pre">connection</span> <span class="pre">timed</span> <span class="pre">out</span></code> errors popping up as before - launch
+success rate is down to zero again.</p>
+</div>
+<div class="section" id="">
+<span id="id29"></span><h3>21:57<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Realization that the <code class="docutils literal notranslate"><span class="pre">hub-</span></code> pod is being overwhelmed by HTTP
+requests due to the high traffic, and is locking up. This is causing the behavior.</p>
+</div>
+<div class="section" id="">
+<span id="id30"></span><h3>22:12<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>All pods are deleted</p>
+</div>
+<div class="section" id="">
+<span id="id31"></span><h3>22:30<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Pods launching again, we are keeping an eye on the <code class="docutils literal notranslate"><span class="pre">hub-</span></code> pod CPU usage, which was <em>really</em> high during the spikes in traffic (~125%).</p>
+<p>Doing this with <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">--namespace=prod</span> <span class="pre">exec</span> <span class="pre">-it</span> <span class="pre">hub-989cc9bd-5qdcb</span> <span class="pre">/bin/bash</span></code> and then running <code class="docutils literal notranslate"><span class="pre">top</span></code></p>
+</div>
+<div class="section" id="">
+<span id="id32"></span><h3>22:43<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>CPU usage on the hub seems to be stabilized.</p>
+</div>
+<div class="section" id="">
+<span id="id33"></span><h3>22:44<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Another realization: if user pods were deleted while they were
+still running their session, then HTTP requests would be sent to
+“default”, which was the <code class="docutils literal notranslate"><span class="pre">hub</span></code>. This was overwhelming the hub
+even more. We should make “default” go to a 404 page rather than
+hub. <a class="reference external" href="https://grafana.mybinder.org/render/dashboard-solo/db/main-dashboard?refresh=30s&amp;orgId=1&amp;from=1519107353593&amp;to=1519193753593&amp;panelId=4&amp;width=1000&amp;height=500&amp;tz=UTC%2B01%3A00">Response codes for the hub</a>, note the switch from mostly 2xx to 3xx.</p>
+</div>
+<div class="section" id="maybe-earlier">
+<span id="maybe-earlier"></span><h3>22:52 (maybe earlier?)<a class="headerlink" href="#maybe-earlier" title="Permalink to this headline">¶</a></h3>
+<p>We have the idea to delete the routing table for the <code class="docutils literal notranslate"><span class="pre">hub-</span></code> pod so that it reduces the HTTP requests. This is done with the following commands.</p>
+<ul>
+<li><p>First, enter the <code class="docutils literal notranslate"><span class="pre">hub-</span></code> pod and start a python session with:</p>
+<p><code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">--namespace=prod</span> <span class="pre">exec</span> <span class="pre">-it</span> <span class="pre">hub-989cc9bd-5qdcb</span> <span class="pre">/bin/bash</span></code></p>
+<p>then</p>
+<p><code class="docutils literal notranslate"><span class="pre">python</span></code></p>
+</li>
+<li><p>delete default HTTP route:</p>
+<p><code class="docutils literal notranslate"><span class="pre">requests.delete('http://proxy-api:8001/api/routes//',</span> <span class="pre">headers={'Authorization':</span> <span class="pre">'token</span> <span class="pre">'</span> <span class="pre">+</span> <span class="pre">os.environ['CONFIGPROXY_AUTH_TOKEN']})</span></code></p>
+</li>
+<li><p>add route for /hub/api:</p>
+<p><code class="docutils literal notranslate"><span class="pre">requests.post('http://proxy-api:8001/api/routes//hub/api',</span> <span class="pre">headers={'Authorization':</span> <span class="pre">'token</span> <span class="pre">'</span> <span class="pre">+</span> <span class="pre">os.environ['CONFIGPROXY_AUTH_TOKEN']},</span> <span class="pre">json={'hub':</span> <span class="pre">True,</span> <span class="pre">'target':</span> <span class="pre">'http://10.15.251.161:8081',</span> <span class="pre">'jupyterhub':</span> <span class="pre">True,</span> <span class="pre">'last_activity':</span> <span class="pre">'2018-02-20T21:18:29.579Z'})</span></code></p>
+</li>
+</ul>
+<p>We decide to <em>not</em> experiment on live users right now.
+Everything has been stable once the 100-users-per-repo
+throttling had been re-established..</p>
+</div>
+</div>
+<div class="section" id="feb-21-13-00">
+<span id="feb-21-13-00"></span><h2>Feb 21, 13:00<a class="headerlink" href="#feb-21-13-00" title="Permalink to this headline">¶</a></h2>
+<p>A more permanent fix for the proxy routes is applied to redirect all requests for stopped pods back to the Binder landing page (<a class="reference external" href="https://github.com/jupyterhub/mybinder.org-deploy/pull/441">PR #441</a>) by adding a route on <code class="docutils literal notranslate"><span class="pre">/user/</span></code> in the configurable-http-proxy (CHP) routing table that is handled by an nginx instance redirecting all requests to the main deployment URL.</p>
+<div class="section" id="">
+<span id="id34"></span><h3>15:15<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">/user/</span></code> route is updated to serve 404 on most URLs instead of redirecting to BinderHub, to avoid shifting request load to BinderHub.</p>
+</div>
+<div class="section" id="">
+<span id="id35"></span><h3>16:20<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>many pods are failing to stop, causing an increase in failures. cordon nodes <code class="docutils literal notranslate"><span class="pre">-qz3m</span></code> and <code class="docutils literal notranslate"><span class="pre">-vvsm</span></code> as likely culprits due to lots of error logs attributed to these instances in VM logs.</p>
+<p>note: need to find a better way to identify bad nodes</p>
+</div>
+</div>
+<div class="section" id="feb-22-07-13">
+<span id="feb-22-07-13"></span><h2>Feb 22, 07:13<a class="headerlink" href="#feb-22-07-13" title="Permalink to this headline">¶</a></h2>
+<p>It is discovered that the hub’s high CPU usage is due to a known bug in KubeSpawner with the Kubernetes Python client version 4.0 that was <a class="reference external" href="https://github.com/jupyterhub/zero-to-jupyterhub-k8s/pull/462">fixed</a> in the jupyterhub helm chart v0.6. With kubernetes-client 4.0 Each Spawner allocates four idle threads via a ThreadPool. After some time, the total thread count gets high enough (~7000) that CPU usage get very high, even when the threads are idle.</p>
+<div class="section" id="">
+<span id="id36"></span><h3>07:18<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>The jupyterhub chart version used by binderhub <a class="reference external" href="https://github.com/jupyterhub/binderhub/pull/463">is updated to v0.6</a>.
+Once deployed, CPU usage of the Hub returns close to zero.
+This high CPU usage in the Hub due to a flood of threads created by kubernetes-client is believed to be the root cause of most of our issues during this incident.</p>
+</div>
+</div>
+<div class="section" id="conclusions">
+<span id="conclusions"></span><h2>Conclusions<a class="headerlink" href="#conclusions" title="Permalink to this headline">¶</a></h2>
+<p>The ultimate cause of this incident was a bug in a specific version JupyterHub+KubeSpawner+kubernetes-client that causes unreasonably high load for a moderate load. This bug had been fixed weeks ago in the jupyterhub chart, and was present. BinderHub was using a development version of the jupyterhub chart <em>prior</em> to the latest stable release.</p>
+<ol class="simple">
+<li><p>deploying a capacity increase during heavy load may not be a recipe for success, but this is inconclusive.</p></li>
+<li><p>handling of slow shutdown needs work in jupyterhub</p></li>
+<li><p>there is a bug in jupyterhub causing it to attempt to delete routes from the proxy that are not there. The resulting 404 is already fixed in jupyterhub, but the bug causing the incorrect <em>attempt</em> is still undiagnosed.</p></li>
+<li><p>grafana is regularly being restarted, which causes the page to be down. Since deployments now notify grafana of a deploy, this can prevent deploy success. It is a harmless failure in this case because if the grafana annotation fails, no deploy stages are attempted, so a Travis retry is quite safe.</p></li>
+<li><p>culler has an issue where it exits if its request fails with 400</p></li>
+<li><p>culler shouldn’t be making requests that fail with 400</p></li>
+<li><p>Deploying a change to <code class="docutils literal notranslate"><span class="pre">prod</span></code> under heavy load causes instability, in this case manifesting in
+new users not being created.</p></li>
+<li><p>Unclear if this instability was fixed by deleting <code class="docutils literal notranslate"><span class="pre">binder-</span></code>, or if this was just waiting for a
+change to propagate.</p></li>
+<li><p>JupyterHub was basically getting swamped because it was handling more HTTP requests by an order of magnitude or more. This was because of a few factors:</p>
+<ol class="simple">
+<li><p>The aforementioned big bump in usage</p></li>
+<li><p>The “default” route points to the hub, so when a user’s pod would get delete and they’d continue doing stuff, all resulting requests went to the hub.</p></li>
+<li><p>We don’t have a mechanism for throttling requests on the hub</p></li>
+<li><p>We only have a single hub that’s handling all HTTP requests</p></li>
+<li><p>There were cascading effects going on where errors would generate more HTTP requests that would worsen the problem.</p></li>
+</ol>
+</li>
+<li><p>some issues may have been attributable to unhealthy nodes, but diagnosing unhealthy nodes is difficult.</p></li>
+</ol>
+</div>
+<div class="section" id="action-items">
+<span id="action-items"></span><h2>Action Items<a class="headerlink" href="#action-items" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="jupyterhub">
+<span id="jupyterhub"></span><h3>JupyterHub<a class="headerlink" href="#jupyterhub" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Release JupyterHub 0.9 (or backport for 0.8.2), which has some known fixes for some of these bugs (https://github.com/jupyterhub/jupyterhub/issues/1676)</p></li>
+<li><p>Improve handling of spawners that are slow to stop https://github.com/jupyterhub/jupyterhub/issues/1677</p></li>
+<li><p>Investigating allowing deletion of users whose servers are slow to stop or fail to stop altogether https://github.com/jupyterhub/jupyterhub/issues/1677</p></li>
+<li><p>implement API-only mode for use cases like Binder (https://github.com/jupyterhub/jupyterhub/issues/1675)</p></li>
+</ul>
+</div>
+<div class="section" id="zero-to-jupyterhub">
+<span id="zero-to-jupyterhub"></span><h3>Zero-to-JupyterHub<a class="headerlink" href="#zero-to-jupyterhub" title="Permalink to this headline">¶</a></h3>
+<p>cull_idle_servers:</p>
+<ul class="simple">
+<li><p>identify reason why 400 responses cause script to exit (https://github.com/jupyterhub/zero-to-jupyterhub-k8s/issues/522)</p></li>
+<li><p>avoid 400 responses by waiting for servers to stop before deleting users (https://github.com/jupyterhub/zero-to-jupyterhub-k8s/issues/522)</p></li>
+</ul>
+</div>
+<div class="section" id="binderhub">
+<span id="binderhub"></span><h3>BinderHub<a class="headerlink" href="#binderhub" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>ensure pycurl is used, which is known to perform better with large numbers of requests than tornado’s default SimpleAsyncHTTPClient (https://github.com/jupyterhub/binderhub/pull/460)</p></li>
+<li><p>Investigate timeout issue, which may be due to lack of pycurl, too many concurrent requests, or purely the overloaded Hub (https://github.com/jupyterhub/binderhub/issues/464)</p></li>
+<li><p>separate rejection code/metadata for launch failures due to repo limit vs. “regular” launch failures. Note: on investigation, we already do this so launch failures should <em>not</em> include rejected launches.</p></li>
+<li><p>Figure out if there’s a way to reduce the number of HTTP requests that are going to the JupyterHub (this became a problem w/ high load) (https://github.com/jupyterhub/binderhub/pull/461)</p></li>
+<li><p>Make it possible for Binder to launch multiple JupyterHubs and direct users through those hubs in a round-robin fashion (https://github.com/jupyterhub/binderhub/issues/465)</p></li>
+</ul>
+</div>
+<div class="section" id="deployment">
+<span id="deployment"></span><h3>Deployment<a class="headerlink" href="#deployment" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Avoid sending requests for stopped pods to the Hub (which may overwhelm it if there’s high load) (https://github.com/jupyterhub/mybinder.org-deploy/pull/444)</p></li>
+<li><p>Document ways to suspect and identify unhealthy nodes. At least some of the issues had to do with nodes that had become unhealthy, but diagnosing this was difficult. (https://github.com/jupyterhub/mybinder.org-deploy/issues/468)</p></li>
+<li><p>Come up with group guidelines for deploying changes under heavy loads. (https://github.com/jupyterhub/mybinder.org-deploy/issues/466)</p></li>
+<li><p>Investigate what are “expected” downtimes for a change to repo user limits, or other changes more broadly (https://github.com/jupyterhub/mybinder.org-deploy/issues/466)</p></li>
+<li><p>Find a way to limit HTTP requests to the JupyterHub in cases
+of high load.</p></li>
+<li><p>“we should also monitor and alert on jupyterhub process &gt; 70% CPU” (monitoring done <a class="reference external" href="https://grafana.mybinder.org/dashboard/db/components-resource-metrics">in grafana</a>)</p></li>
+<li><p>Move Grafana and other support services to an external cluster, so they are not affected by load in the main cluster. Our tools for debugging should not be affected by the bugs we are trying to debug (https://github.com/jupyterhub/mybinder.org-deploy/issues/438)</p></li>
+<li><p>Document clear processes for requesting limit raises and how they should be granted https://github.com/jupyterhub/mybinder.org-deploy/issues/438</p></li>
+<li><p>Fix cadvisor + prometheus setup so we properly get CPU / Memory statistics from cadvisor https://github.com/jupyterhub/mybinder.org-deploy/pull/449</p></li>
+<li><p>Make all infrastructure pods be in the <code class="docutils literal notranslate"><span class="pre">Guaranteed</span></code> QoS so they do not get restarted when resources get scarce</p></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+   <div class='prev-next-bottom'>
+     
+      <a class='left-prev' href="2018-02-22-nginx-down.html" title="previous chapter">2018-02-22 NGINX crash</a>
+      <a class='right-next' href="2018-02-12-launch-fail.html" title="next chapter">2018-02-12, Hub Launch Fail</a>
+   <div style='clear:both;'></div>
+ 
+   </div>
+
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <p class="logo"><a href="../index.html">
+    <img class="logo" src="../_static/logo.jpg" alt="Logo"/>
+  </a></p>
+<h1 class="logo"><a href="../index.html">Site Reliability Guide for mybinder.org</a></h1>
+
+
+
+<p class="blurb">A Site Reliability Guide for mybinder.org deployment</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=jupyterhub&repo=binderhub&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<h3>Table of Contents</h3>
+<p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting started with the <code class="docutils literal notranslate"><span class="pre">mybinder.org</span></code> dev team</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../production_environment.html">Production environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../terminology.html">Terminology for the deployment</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Deployment</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/prereqs.html">Pre-requisite technologies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/how.html">How to deploy a change to mybinder.org?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/what.html">What does a MyBinder.org deployment do?</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Operation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../common_problems.html">Common problems and their solutions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../command_snippets.html">Command snippets used during operations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../grafana_plots.html">Some useful Grafana plots</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../components/metrics.html">Metrics collection with Prometheus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/dashboards.html">Operational Dashboards with Grafana</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/ingress.html">HTTPS ingress with nginx + kube-lego</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/cloud.html">Cloud products</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/matomo.html">Matomo (formerly Piwik) analytics</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../analytics/events-archive.html">The Analytics Events Archive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analytics/cloud-costs.html">Cloud Costs Data</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Incidents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="2019-04-03-ingress-cordoned.html">2019-04-03, 30min outage during node pool upgrade</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2019-03-24-r2d-upgrade.html">2019-03-24, repo2docker upgrade and docker image cache wipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2019-02-20-no-logs.html">incident date: 2019-02-20, kubectl logs unavailable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-07-30-jupyterlab-build-cpu-saturate.html">2018-07-30 JupyterLab builds saturate BinderHub CPU</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-07-08-podsnips-aplenty.html">2018-07-08, too many pods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-04-18-cull-flood.html">2018-04-18, Culler flood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-03-31-server-start-fail.html">2018-03-31, Server launch failures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-03-26-no-space-left.html">2018-03-26, “no space left on device”</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-03-13-PVC-hub-locked.html">2018-03-13, PVC for hub is locked</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-02-22-nginx-down.html">2018-02-22 NGINX crash</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">2018-02-20, JupyterLab Announcement swamps Binder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-02-12-launch-fail.html">2018-02-12, Hub Launch Fail</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-01-18-reddit-hug.html">2018-01-18, reddit hugs mybinder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-01-18-ssl-outdated.html">2018-01-11, Warning from letsencrypt about outdated SSL certificate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-01-17-ubuntu-upgrade.html">2018-01-17, Emergency Aardvark bump</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-01-04-failed-staging-deploy.html">2018-01-04, Failed deploy to staging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2017-11-30-oom-proxy.html">2017-11-30 4:23PM PST, OOM (Out of Memory) Proxy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2017-10-17-cluster-full.html">2017-10-17, Cluster Full</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2017-09-29-504.html">2017-09-29, 504</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2017-09-27-hub-403.html">2017-09-27, Hub 403</a></li>
+<li class="toctree-l1"><a class="reference internal" href="template-incident-report.html">Template for reports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="template-incident-report.html#incident-date-yyyy-mm-dd-incident-name">{{ incident date: yyyy-mm-dd }}, {{ incident name }}</a></li>
+</ul>
+
+
+<div class="relations">
+<h3>Navigation</h3>
+<ul>
+  <li><a href="../index.html">Documentation Home</a><ul>
+  <li><a href="2018-02-22-nginx-down.html" title="Previous">Previous topic</a></li>
+  <li><a href="2018-02-12-launch-fail.html" title="Next">Next topic</a></li>
+  </ul>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/incident-reports/2018-02-20-jupyterlab-announcement.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+        <form class="search" action="../search.html" method="get">
+            <input type="text" name="q" placeholder="Quick Search" aria-labelledby="searchlabel" />
+            <input type="submit" value="Go" />
+        </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017 - 2019, Binder Team.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/incident-reports/2018-02-20-jupyterlab-announcement.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

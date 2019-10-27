@@ -1,0 +1,657 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Command snippets used during operations &#8212; Site Reliability Guide for mybinder.org 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Some useful Grafana plots" href="grafana_plots.html" />
+    <link rel="prev" title="Common problems and their solutions" href="common_problems.html" />
+
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<!-- Add JupyterHub styling -->
+<link rel="stylesheet" href="_static/jupyter.css" type="text/css" />
+<link rel="shortcut icon" href="_static/favicon.ico"/>
+
+
+  </head><body>
+<div class="rightsidebar">
+    <h3>On this page</h3>
+    <ul>
+<li><a class="reference internal" href="#">Command snippets used during operations</a><ul>
+<li><a class="reference internal" href="#the-mybinder-tools-python-repository">The mybinder-tools Python repository</a></li>
+<li><a class="reference internal" href="#cluster-management">Cluster management</a><ul>
+<li><a class="reference internal" href="#merging-kubernetes-credentials">Merging kubernetes credentials</a></li>
+<li><a class="reference internal" href="#upgrading-kubernetes">Upgrading kubernetes</a><ul>
+<li><a class="reference internal" href="#upgrading-staging">Upgrading staging</a></li>
+<li><a class="reference internal" href="#upgrading-prod">Upgrading prod</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pod-management">Pod management</a><ul>
+<li><a class="reference internal" href="#list-all-pods-that-match-a-given-name-or-age">List all pods that match a given name or age</a></li>
+<li><a class="reference internal" href="#delete-all-pods-that-match-a-given-name-or-age">Delete all pods that match a given name or age</a></li>
+<li><a class="reference internal" href="#forcibly-delete-a-pod">Forcibly delete a pod</a></li>
+<li><a class="reference internal" href="#effects-of-deleting-production-pods">Effects of deleting production pods</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#node-management-and-information">Node management and information</a><ul>
+<li><a class="reference internal" href="#manually-increase-cluster-size">Manually increase cluster size</a></li>
+<li><a class="reference internal" href="#removing-a-node-from-the-cluster">Removing a node from the cluster</a></li>
+<li><a class="reference internal" href="#list-how-many-user-pods-are-running-on-all-nodes">List how many user pods are running on all nodes</a></li>
+<li><a class="reference internal" href="#recycling-nodes">Recycling nodes</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#networking">Networking</a><ul>
+<li><a class="reference internal" href="#banning-traffic">Banning traffic</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#acronyms-that-chris-likes-to-use-in-gitter">Acronyms that Chris likes to use in Gitter</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+   <div class='prev-next-top'>
+     
+      <a class='left-prev' href="common_problems.html" title="previous chapter">Previous</a>
+      <a class='right-next' href="grafana_plots.html" title="next chapter">Next</a>
+   <div style='clear:both;'></div>
+ 
+   </div>
+
+
+          <div class="body" role="main">
+            
+  <div class="section" id="command-snippets-used-during-operations">
+<span id="command-snippets-used-during-operations"></span><h1>Command snippets used during operations<a class="headerlink" href="#command-snippets-used-during-operations" title="Permalink to this headline">¶</a></h1>
+<p>This is a collection of frequently and infrequently used command-line snippets
+that are useful for operating and investigating what is happening on the
+cluster. Think of it as a mybinder.org specific extension of the <a class="reference external" href="https://kubernetes.io/docs/reference/kubectl/cheatsheet/">kubernetes
+cheatsheet</a>.</p>
+<div class="section" id="the-mybinder-tools-python-repository">
+<span id="the-mybinder-tools-python-repository"></span><h2>The mybinder-tools Python repository<a class="headerlink" href="#the-mybinder-tools-python-repository" title="Permalink to this headline">¶</a></h2>
+<p>Note that there is a helper package for working with Kubernetes in Python,
+you can find it in the <a class="reference external" href="https://github.com/jupyterhub/mybinder-tools">mybinder-tools repo</a>.</p>
+</div>
+<div class="section" id="cluster-management">
+<span id="cluster-management"></span><h2>Cluster management<a class="headerlink" href="#cluster-management" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="merging-kubernetes-credentials">
+<span id="merging-kubernetes-credentials"></span><h3>Merging kubernetes credentials<a class="headerlink" href="#merging-kubernetes-credentials" title="Permalink to this headline">¶</a></h3>
+<p>Before completing any of the command snippets below, you need to merge the kubernetes credentials of the cluster you’d like to work with into your <code class="docutils literal notranslate"><span class="pre">~/.kube/config</span></code> file.
+This is achieved by running:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gcloud container clusters get-credentials &lt;CLUSTER-NAME&gt; --zone<span class="o">=</span>us-central1-a
+</pre></div>
+</div>
+</div>
+<div class="section" id="upgrading-kubernetes">
+<span id="upgrading-kubernetes"></span><h3>Upgrading kubernetes<a class="headerlink" href="#upgrading-kubernetes" title="Permalink to this headline">¶</a></h3>
+<p>Upgrading Kubernetes is done in two steps:</p>
+<ol class="simple">
+<li><p>upgrade the kubernetes master version</p></li>
+<li><p>upgrade the node version</p></li>
+</ol>
+<p>First, we can upgrade the master version.
+This is easiest via the Google Cloud Console which gives you a button to pick the latest version.
+Upgrading master will result in some brief downtime of Binder during the upgrade.
+It should take a couple of minutes.</p>
+<p>To upgrade the master version with <code class="docutils literal notranslate"><span class="pre">gcloud</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gcloud --project<span class="o">=</span>binder-staging container clusters upgrade staging --master --zone<span class="o">=</span>us-central1-a
+gcloud --project<span class="o">=</span>binder-prod container clusters upgrade prod-a --master --zone<span class="o">=</span>us-central1-a
+</pre></div>
+</div>
+<p>Now we can start the process of upgrading node versions, which takes more time.
+Upgrading nodes really means replacing each node with a new one with the same name, using the new version.
+If we use the above <code class="docutils literal notranslate"><span class="pre">container</span> <span class="pre">clusters</span> <span class="pre">upgrade</span></code> command to upgrade nodes,
+it will take a very long time as Kubernetes drains nodes one by one to replace them.
+To minimize downtime at the expense of some extra nodes for a while,
+we create a whole new node pool with the new version and then cordon
+and eventually delete the existing one.</p>
+<p><strong>Note:</strong> the process for changing node machine-type is the same
+as the process for upgrading kubernetes node version,
+since it is also creating a new node pool and draining and deleting the old one.</p>
+<div class="section" id="upgrading-staging">
+<span id="upgrading-staging"></span><h4>Upgrading staging<a class="headerlink" href="#upgrading-staging" title="Permalink to this headline">¶</a></h4>
+<p>First, start the upgrade on staging by creating a new node pool.
+Check the node type, number of nodes, and disk size.
+The new pool should match the old one.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># old_pool is the name of the pool that we are replacing</span>
+<span class="nv">old_pool</span><span class="o">=</span>default-pool
+<span class="c1"># new_pool is the name our new pool will have. It must be different</span>
+<span class="nv">new_pool</span><span class="o">=</span>pool-<span class="k">$(</span>date +<span class="s2">&quot;%Y%m%d&quot;</span><span class="k">)</span>
+
+
+gcloud --project<span class="o">=</span>binder-staging container node-pools create <span class="nv">$new_pool</span> <span class="se">\</span>
+    --cluster<span class="o">=</span>staging <span class="se">\</span>
+    --disk-size<span class="o">=</span><span class="m">500</span> <span class="se">\</span>
+    --machine-type<span class="o">=</span>n1-standard-4 <span class="se">\</span>
+    --enable-autorepair <span class="se">\</span>
+    --num-nodes<span class="o">=</span><span class="m">2</span> <span class="se">\</span>
+    --zone<span class="o">=</span>us-central1-a
+</pre></div>
+</div>
+<blockquote>
+<div><p>Note: To see a list of the node pools, run <code class="docutils literal notranslate"><span class="pre">gcloud</span> <span class="pre">container</span> <span class="pre">node-pools</span> <span class="pre">list</span> <span class="pre">--cluster</span> <span class="pre">staging</span> <span class="pre">--project=binder-staging</span></code>.</p>
+</div></blockquote>
+<p>After the pool is created, cordon the previous nodes:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># for each node in the old pool:</span>
+kubectl cordon <span class="nv">$node</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p>Note: You can run <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">get</span> <span class="pre">nodes</span> <span class="pre">-n</span> <span class="pre">&lt;NAMESPACE&gt;</span></code> to see a list of the current nodes.</p>
+</div></blockquote>
+<p>Test that launches succeed on the new nodes by visiting
+<a class="reference external" href="https://staging.mybinder.org/v2/gh/binderhub-ci-repos/requirements/master">https://staging.mybinder.org/v2/gh/binderhub-ci-repos/requirements/master</a></p>
+<blockquote>
+<div><p>Note: You might have to restart one of the ingress pods named <code class="docutils literal notranslate"><span class="pre">staging-nginx-ingress-controller-*</span></code> as they will both be on cordoned nodes and hence not receiving traffic. The symptom of this is that https://staging.mybinder.org does not load anymore.</p>
+</div></blockquote>
+<p>Once this is verified to be successful, the old node pool can be drained:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl drain --force --delete-local-data --ignore-daemonsets --grace-period<span class="o">=</span><span class="m">0</span> <span class="nv">$node</span>
+</pre></div>
+</div>
+<p>and then the node pool can be deleted:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gcloud --project<span class="o">=</span>binder-staging container node-pools delete <span class="nv">$old_pool</span> --cluster<span class="o">=</span>staging --zone<span class="o">=</span>us-central1-a
+</pre></div>
+</div>
+</div>
+<div class="section" id="upgrading-prod">
+<span id="upgrading-prod"></span><h4>Upgrading prod<a class="headerlink" href="#upgrading-prod" title="Permalink to this headline">¶</a></h4>
+<p>Upgrading production is mostly the same as upgrading staging.
+It has a couple small differences in node configuration,
+and we don’t want to delete the old pool as soon as we have the new one
+because there will be active users on it.</p>
+<p>Production has two node pools:</p>
+<ol class="simple">
+<li><p>a “core” pool, which runs the hub, binder, etc.</p></li>
+<li><p>a “user” pool, where user pods run.</p></li>
+</ol>
+<p>The process is mostly the same, but we do it in two steps (for two pools).</p>
+<p>As with staging, first we create the new pool,
+copying configuration from the old pool.
+On production, we use <code class="docutils literal notranslate"><span class="pre">pd-ssd</span></code> disks, enable autoscaling,
+and use the larger <code class="docutils literal notranslate"><span class="pre">n1-highmem-16</span></code> nodes for users.</p>
+<p>The ‘core’ pool uses n1-highmem-4 nodes and has a smaller, 250GB SSD.</p>
+<blockquote>
+<div><p>Note: <code class="docutils literal notranslate"><span class="pre">gcloud</span> <span class="pre">beta</span></code> is currently required for the <code class="docutils literal notranslate"><span class="pre">--disk-type</span></code> argument.</p>
+</div></blockquote>
+<p>First we’ll create variables that point to our old and new node pools to make it clear when we’re creating new things vs. deleting old things.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># old_user_pool is the name of the existing user pool, to be deleted</span>
+<span class="c1"># we can automatically assign this to a variable like so</span>
+<span class="nv">old_user_pool</span><span class="o">=</span><span class="k">$(</span>gcloud container node-pools list --cluster prod-a --project<span class="o">=</span>binder-prod --format json <span class="p">|</span> jq -r <span class="s1">&#39;.[].name&#39;</span> <span class="p">|</span> grep <span class="s1">&#39;^user&#39;</span><span class="k">)</span>
+<span class="c1"># new_user_pool can be anything, as long as it isn&#39;t the same as old_user_pool</span>
+<span class="c1"># we recommend appending with the date</span>
+<span class="nv">new_user_pool</span><span class="o">=</span>user-<span class="k">$(</span>date +<span class="s2">&quot;%Y%m%d&quot;</span><span class="k">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p>Note: You can see a list of the node pools by running:</p>
+</div></blockquote>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gcloud container node-pools list --cluster prod-a --project<span class="o">=</span>binder-prod --zone<span class="o">=</span>us-central1-a
+</pre></div>
+</div>
+<p>Then we can create the new user pool:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># create the new user pool</span>
+gcloud beta --project<span class="o">=</span>binder-prod container node-pools create <span class="nv">$new_user_pool</span> <span class="se">\</span>
+    --cluster<span class="o">=</span>prod-a <span class="se">\</span>
+    --zone<span class="o">=</span>us-central1-a <span class="se">\</span>
+    --disk-type<span class="o">=</span>pd-ssd <span class="se">\</span>
+    --disk-size<span class="o">=</span><span class="m">1000</span> <span class="se">\</span>
+    --machine-type<span class="o">=</span>n1-highmem-8 <span class="se">\</span>
+    --num-nodes<span class="o">=</span><span class="m">2</span> <span class="se">\</span>
+    --local-ssd-count<span class="o">=</span><span class="m">1</span> <span class="se">\</span>
+    --enable-autoscaling <span class="se">\</span>
+    --enable-autorepair <span class="se">\</span>
+    --min-nodes<span class="o">=</span><span class="m">1</span> <span class="se">\</span>
+    --max-nodes<span class="o">=</span><span class="m">8</span> <span class="se">\</span>
+    --node-labels hub.jupyter.org/node-purpose<span class="o">=</span>user,mybinder.org/pool-type<span class="o">=</span>users
+</pre></div>
+</div>
+<p>and/or create the new core pool:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># the name of the old &#39;core&#39; pool</span>
+<span class="nv">old_core_pool</span><span class="o">=</span><span class="k">$(</span>gcloud container node-pools list --cluster prod-a --project<span class="o">=</span>binder-prod --format json <span class="p">|</span> jq -r <span class="s1">&#39;.[].name&#39;</span> <span class="p">|</span> grep <span class="s1">&#39;^core&#39;</span><span class="k">)</span>
+<span class="c1"># the name of the new &#39;core&#39; pool</span>
+<span class="nv">new_core_pool</span><span class="o">=</span>core-<span class="k">$(</span>date +<span class="s2">&quot;%Y%m%d&quot;</span><span class="k">)</span>
+
+gcloud beta --project<span class="o">=</span>binder-prod container node-pools create <span class="nv">$new_core_pool</span> <span class="se">\</span>
+    --cluster<span class="o">=</span>prod-a <span class="se">\</span>
+    --zone<span class="o">=</span>us-central1-a <span class="se">\</span>
+    --disk-type<span class="o">=</span>pd-ssd <span class="se">\</span>
+    --disk-size<span class="o">=</span><span class="m">250</span> <span class="se">\</span>
+    --machine-type<span class="o">=</span>n1-highmem-4 <span class="se">\</span>
+    --num-nodes<span class="o">=</span><span class="m">1</span> <span class="se">\</span>
+    --enable-autoscaling <span class="se">\</span>
+    --enable-autorepair <span class="se">\</span>
+    --min-nodes<span class="o">=</span><span class="m">1</span> <span class="se">\</span>
+    --max-nodes<span class="o">=</span><span class="m">4</span> <span class="se">\</span>
+    --node-labels hub.jupyter.org/node-purpose<span class="o">=</span>core,mybinder.org/pool-type<span class="o">=</span>core
+</pre></div>
+</div>
+<p>Once the new pool is created, we can start cordoning the old pool.
+To avoid new nodes being allocated in the old pool,
+set the autoscaling upper limit to 1 on the old pool,
+or disable autoscaling on the old pool.
+This can only be done via the cloud console at this time.</p>
+<p><html>
+&lt;img src=”images/node-pool-max-number.gif”, alt=”Set maximum number of nodes in a node pool” height=”442” width=”440”&gt;
+</html></p>
+<p>Since prod has a lot of load which can overwhelm a new node,
+we don’t want to cordon the whole old pool immediately,
+which would drive all of Binder’s traffic to the new nodes.
+Instead, we cordon the old nodes gradually, starting with ~half of the pool.
+After the new nodes have had a chance to warm up
+(check cluster utilization and user pods metrics in grafana, around 10 minutes should be fine),
+we can cordon the rest of the old pool.</p>
+<p>At each point, especially after the old pool is fully cordoned,
+verify that launches work on the new nodes by visiting
+<a class="reference external" href="https://mybinder.org/v2/gh/binderhub-ci-repos/requirements/master">https://mybinder.org/v2/gh/binderhub-ci-repos/requirements/master</a></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># for each node in node pool</span>
+kubectl cordon <span class="nv">$node</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">hub</span></code> pod will need to be manually migrated over to the new node pool.
+This is achieved by deleting the pod and it should automatically restart on one of the new core nodes.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl delete pod &lt;HUB-POD-NAME&gt; -n prod
+</pre></div>
+</div>
+<blockquote>
+<div><p>Note: You can find &lt;HUB-POD-NAME&gt; by running <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">get</span> <span class="pre">pods</span> <span class="pre">-n</span> <span class="pre">prod</span></code>.</p>
+</div></blockquote>
+<p>Unlike staging, prod has active users, so we don’t want to delete the cordoned node pool immediately.
+Wait for user pods to drain from the old nodes (6 hours max), then drain them.
+After draining the nodes, the old pool can be deleted.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl drain --force --delete-local-data --ignore-daemonsets --grace-period<span class="o">=</span><span class="m">0</span> <span class="nv">$node</span>
+
+gcloud --project<span class="o">=</span>binder-prod container node-pools delete <span class="nv">$old_user_pool</span> --cluster<span class="o">=</span>prod-a --zone<span class="o">=</span>us-central1-a
+
+gcloud --project<span class="o">=</span>binder-prod container node-pools delete <span class="nv">$old_core_pool</span> --cluster<span class="o">=</span>prod-a --zone<span class="o">=</span>us-central1-a
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="pod-management">
+<span id="pod-management"></span><h2>Pod management<a class="headerlink" href="#pod-management" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="list-all-pods-that-match-a-given-name-or-age">
+<span id="list-all-pods-that-match-a-given-name-or-age"></span><h3>List all pods that match a given name or age<a class="headerlink" href="#list-all-pods-that-match-a-given-name-or-age" title="Permalink to this headline">¶</a></h3>
+<p>Sometimes you want to delete all the pods for a given repository. The easiest
+way to do this is to name-match the part of the pod name that corresponds to
+the repo (since there will be a bunch of random characters as well).</p>
+<p>Here’s a python script that will match pods with a given name or a given
+age. You can use it with the following pattern:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">scripts</span><span class="o">/</span><span class="n">delete</span><span class="o">-</span><span class="n">pods</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">pod</span><span class="o">-</span><span class="n">name</span> <span class="o">&lt;</span><span class="n">your</span><span class="o">-</span><span class="n">query</span><span class="o">&gt;</span> <span class="o">--</span><span class="n">older</span><span class="o">-</span><span class="n">than</span> <span class="o">&lt;</span><span class="n">your</span><span class="o">-</span><span class="n">query</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--pod-name</span></code> is a string and will be matched to any pod that contains this string.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--older-than</span></code> is a float (in hours) and will match any pod that is older than this amount.</p></li>
+</ul>
+<p>Note, they are both optional, but you need to supply <em>at least</em> one. Running
+the above command by itself will list all pods that match the query.</p>
+</div>
+<div class="section" id="delete-all-pods-that-match-a-given-name-or-age">
+<span id="delete-all-pods-that-match-a-given-name-or-age"></span><h3>Delete all pods that match a given name or age<a class="headerlink" href="#delete-all-pods-that-match-a-given-name-or-age" title="Permalink to this headline">¶</a></h3>
+<p>If you wish to <strong>delete</strong> the pods that match the query above, you supply the <code class="docutils literal notranslate"><span class="pre">--delete</span></code>
+kwarg like so:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">scripts</span><span class="o">/</span><span class="n">delete</span><span class="o">-</span><span class="n">pods</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">pod</span><span class="o">-</span><span class="n">name</span> <span class="o">&lt;</span><span class="n">your</span><span class="o">-</span><span class="n">query</span><span class="o">&gt;</span> <span class="o">--</span><span class="n">older</span><span class="o">-</span><span class="n">than</span> <span class="o">&lt;</span><span class="n">your</span><span class="o">-</span><span class="n">query</span><span class="o">&gt;</span> <span class="o">--</span><span class="n">delete</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="forcibly-delete-a-pod">
+<span id="forcibly-delete-a-pod"></span><h3>Forcibly delete a pod<a class="headerlink" href="#forcibly-delete-a-pod" title="Permalink to this headline">¶</a></h3>
+<p>Sometimes pods aren’t easily deleted, e.g., if they are in a state <code class="docutils literal notranslate"><span class="pre">Unknown</span></code>
+or <code class="docutils literal notranslate"><span class="pre">NodeLost</span></code> kubernetes may not be able to fluidly delete them. This is because
+kubernetes waits for pods to gracefully delete, and if a pod cannot do this
+(e.g., because it is totally unable to communicated with kubernetes), the
+delete process won’t happen. In this case, you can delete such pods with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">kubectl</span> <span class="o">--</span><span class="n">namespace</span><span class="o">=</span><span class="n">prod</span> <span class="n">delete</span> <span class="n">pod</span> <span class="o">&lt;</span><span class="n">POD</span><span class="o">-</span><span class="n">NAME</span><span class="o">&gt;</span> <span class="o">--</span><span class="n">grace</span><span class="o">-</span><span class="n">period</span><span class="o">=</span><span class="mi">0</span> <span class="o">--</span><span class="n">force</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="effects-of-deleting-production-pods">
+<span id="effects-of-deleting-production-pods"></span><h3>Effects of deleting production pods<a class="headerlink" href="#effects-of-deleting-production-pods" title="Permalink to this headline">¶</a></h3>
+<p>Below is a list of each production pod, and the expected outcome that comes with
+deleting each one.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">hub-</span></code> active user sessions will not be affected. New and pending launches will fail until the new Hub comes back.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">binder-</span></code> the <code class="docutils literal notranslate"><span class="pre">mybinder.org</span></code> website will temporarily go down. Active user sessions will not be affected.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">proxy-</span></code> all current users will lose connections (kernel connection lost) until the proxy returns and the Hub restores the routes. Server state is unaffected. Most browser sessions should recover by restoring connections. All pending launches will fail due to lost connections.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">proxy-patches-</span></code> brief, minor degradation of error messages when browsers attempt to connect to a not-running server. This results in increased load on the Hub, handling requests from browsers whose idle servers have been culled.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">redirector-</span></code> redirect sites (beta.mybinder.org) will 404 instead of sending to mybinder.org.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">jupyter-</span></code> deleting a user pod will shut down their session. The user will
+encounter errors when they attempt to submit code to the kernel.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="node-management-and-information">
+<span id="node-management-and-information"></span><h2>Node management and information<a class="headerlink" href="#node-management-and-information" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="manually-increase-cluster-size">
+<span id="manually-increase-cluster-size"></span><h3>Manually increase cluster size<a class="headerlink" href="#manually-increase-cluster-size" title="Permalink to this headline">¶</a></h3>
+<p>Sometimes we know ahead of time that mybinder.org will receive a lot of traffic.
+As preparation we might choose to increase the size of the cluster before the
+event.</p>
+<p>To pre-emptively bump the cluster size beyond current occupancy, follow these steps:</p>
+<ul class="simple">
+<li><p>Increase autoscaler minimum size. (note this will lead to a brief period where
+the kubernetes API is not available.)</p>
+<ul>
+<li><p>Go to http://console.cloud.google.com/</p></li>
+<li><p>Click “Kubernetes engine” -&gt; “edit” button</p></li>
+<li><p>Under “Node Pools” find the “minimum size” field and update it.</p></li>
+</ul>
+</li>
+<li><p>Use the <code class="docutils literal notranslate"><span class="pre">gcloud</span></code> command line tool to explicitly resize the cluster.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">gcloud</span> <span class="pre">container</span> <span class="pre">clusters</span> <span class="pre">resize</span> <span class="pre">prod-a</span> <span class="pre">--size</span> <span class="pre">&lt;NEW-SIZE&gt;</span></code></p></li>
+</ul>
+</li>
+</ul>
+<p>Manually resizing a cluster with autoscaling on doesn’t always work because the autoscaler
+can automatically reduce the cluster size after asking for more nodes that
+aren’t needed. Increasing the minimum size works if you are resizing from
+outside the autoscaler’s bounds (e.g. 2) to the new minimum cluster size (3), so the
+autoscaler doesn’t have any idle nodes available for deletion. Similarly if
+the new minimum is higher than the current size and there is no need to increase
+the size of the cluster the autoscaler will not scale up the cluster even though
+it is below the minimum size.</p>
+</div>
+<div class="section" id="removing-a-node-from-the-cluster">
+<span id="removing-a-node-from-the-cluster"></span><h3>Removing a node from the cluster<a class="headerlink" href="#removing-a-node-from-the-cluster" title="Permalink to this headline">¶</a></h3>
+<p>To remove a node from the cluster, we follow a two-step process. We first
+<strong>cordon</strong> the node, which prevents new pods from being scheduled on it. We then
+<strong>drain</strong> the node, which removes all remaining pods from the node.</p>
+<ul>
+<li><p>Step 1. Cordon the node</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl cordon &lt;NODE-NAME&gt;
+</pre></div>
+</div>
+<p>“cordoning” explicitly tells kubernetes <strong>not</strong> to start new pods on this node.
+For more information on cordoning, see :ref:<code class="docutils literal notranslate"><span class="pre">term-cordoning</span></code>.</p>
+</li>
+<li><p>Step 2. Wait a few hours for pods to naturally get deleted from the node.
+We’d rather not forcibly delete pods if possible. However if you <em>need</em> to
+delete all the pods on the node, you can skip to step 3.</p></li>
+<li><p>Step 3. Remove all pods from the node</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl drain --force --delete-local-data --ignore-daemonsets --grace-period<span class="o">=</span><span class="m">0</span>  &lt;NODE-NAME&gt;
+</pre></div>
+</div>
+<p>After running this, the node should now (forcibly) have 0 pods running on it.</p>
+</li>
+<li><p>Step 4. Confirm the node has no pods on it after a few minutes. You can do this
+with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="sb">`</span>kubectl get pods --namespace<span class="o">=</span>prod -o wide <span class="p">|</span> grep <span class="s2">&quot;&lt;NODE-NAME&gt;</span>$<span class="s2">&quot;</span> <span class="p">|</span> grep <span class="s2">&quot;^jupyter-&quot;</span><span class="sb">`</span>
+</pre></div>
+</div>
+<p>If there are any pods remaining, manually delete them with <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">delete</span> <span class="pre">pod</span></code>.</p>
+</li>
+</ul>
+<p>Once the node has no pods on it, the autoscaler will automatically remove it.</p>
+<p><strong>A note on the need for scaling down with the autoscaler</strong>.
+The autoscaler has issues scaling nodes <em>down</em>, so scaling down needs to be
+manually done. The problems are caused by:</p>
+<ol class="simple">
+<li><p>The cluster autoscaler will never remove nodes that have user pods running.</p></li>
+<li><p>We can not tell the Kubernetes Scheduler to ‘pack’ user pods efficiently -
+if there are two nodes, one with 60 user pods and another with 2, a new user
+pod can end up in either of those. Since all user pods need to be gone from
+a node before it can be scaled down, this leads to inefficient
+load distribution.</p></li>
+</ol>
+<p>Because the autoscaler will only remove a node when it has no pods, this means
+it is unlikely that nodes will be properly removed. Thus the necessity for
+manually scaling down now and then.</p>
+</div>
+<div class="section" id="list-how-many-user-pods-are-running-on-all-nodes">
+<span id="list-how-many-user-pods-are-running-on-all-nodes"></span><h3>List how many user pods are running on all nodes<a class="headerlink" href="#list-how-many-user-pods-are-running-on-all-nodes" title="Permalink to this headline">¶</a></h3>
+<p>You can find the number of user pods on various nodes with the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl --namespace<span class="o">=</span>prod get pod --no-headers -o wide -l <span class="nv">component</span><span class="o">=</span>singleuser-server <span class="p">|</span> awk <span class="s1">&#39;{ print $7; }&#39;</span> <span class="p">|</span> sort <span class="p">|</span> uniq -c <span class="p">|</span> sort -n
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">-o</span> <span class="pre">wide</span></code> lists extra information per pod, including the name of the node it is
+running on. The <code class="docutils literal notranslate"><span class="pre">-l</span> <span class="pre">component=singleuser-server</span></code> makes it only show you user server
+pods. The <code class="docutils literal notranslate"><span class="pre">--no-headers</span></code> asks kubectl to not print column titles as a header.
+The <code class="docutils literal notranslate"><span class="pre">awk</span></code> command selects the 7th column in the output (which is the node name).
+The sort / uniq / sort combination helps print the number of pods per each node in
+sorted order.</p>
+</div>
+<div class="section" id="recycling-nodes">
+<span id="recycling-nodes"></span><h3>Recycling nodes<a class="headerlink" href="#recycling-nodes" title="Permalink to this headline">¶</a></h3>
+<p>We have found that nodes older than &gt; 4 days often begin to have problems.
+The nature of these problems is often hard to debug, but they tend to be
+fixed by “recycling” the nodes (AKA, creating a new node to take the place
+of the older node). Here’s the process for recycling nodes.</p>
+<ul>
+<li><p><strong>List the node ages.</strong> The following command will list the current nodes
+and their ages.</p>
+<p><code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">get</span> <span class="pre">node</span></code></p>
+</li>
+<li><p><strong>Check if any nodes are &gt; 4 days old.</strong> These are the nodes that we can
+recycle.</p></li>
+<li><p><strong>Cordon the node you’d like to recycle.</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">cordon</span> <span class="pre">&lt;NODE-NAME&gt;</span></code></p>
+</li>
+<li><p><strong>If you need a new node immediately.</strong> E.g., if we think a currently-used
+node is causing problems and we need to move production pods to a new node.</p>
+<p>In this case, manually resize the cluster up so that a new node is added,
+then delete the relevant pods from the (cordoned) old node.</p>
+</li>
+<li><p><strong>Wait a few hours.</strong> This gives the pods time to naturally leave the node.</p></li>
+<li><p><strong>Drain the node.</strong> Run the following command to remove all pods from the node.</p>
+<p><code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">drain</span> <span class="pre">--force</span> <span class="pre">--delete-local-data</span> <span class="pre">--ignore-daemonsets</span> <span class="pre">--grace-period=0</span> <span class="pre">&lt;NODE-NAME&gt;</span></code></p>
+</li>
+<li><p><strong>If it isn’t deleted after several hours, delete the node.</strong> with</p>
+<p><code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">delete</span> <span class="pre">&lt;NODE-NAME&gt;</span></code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="networking">
+<span id="networking"></span><h2>Networking<a class="headerlink" href="#networking" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="banning-traffic">
+<span id="banning-traffic"></span><h3>Banning traffic<a class="headerlink" href="#banning-traffic" title="Permalink to this headline">¶</a></h3>
+<p>Sometimes there’s bad traffic, either malicious or accidental,
+and we want to block traffic, either incoming or outgoing,
+between Binder and that source.</p>
+<p>We can blacklist traffic in three ways:</p>
+<ol class="simple">
+<li><p>ingress ip (bans requests to Binder coming from this ip or ip range)</p></li>
+<li><p>egress ip (bans outgoing traffic <em>from</em> Binder to these ip addresses)</p></li>
+<li><p>egress DNS (disables DNS resolution for specified domains)</p></li>
+</ol>
+<p>All of these are <em>stored</em> in the <code class="docutils literal notranslate"><span class="pre">secrets/ban.py</span></code> file.
+These are not upgraded</p>
+<p>To update what should be banned, edit the <code class="docutils literal notranslate"><span class="pre">secrets/ban.py</span></code> file
+and find the relevant list. If ip-based banning changed,
+run the <code class="docutils literal notranslate"><span class="pre">scripts/firewall-rules</span></code> script to update the firewall:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./scripts/firewall-rules --project<span class="o">=</span>binder-staging <span class="o">[</span>gke_binder-staging_us-central1-a_staging<span class="o">]</span>
+./scripts/firewall-rules --project<span class="o">=</span>binder-prod <span class="o">[</span>gke_binder-prod_us-central1-a_prod-a<span class="o">]</span>
+</pre></div>
+</div>
+<p>If it is an update to the DNS block list, run the <code class="docutils literal notranslate"><span class="pre">secrets/ban.py</span></code> script:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./secrets/ban.py gke_binder-staging_us-central1-a_staging
+./secrets/ban.py gke_binder-prod_us-central1-a_prod-a
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="acronyms-that-chris-likes-to-use-in-gitter">
+<span id="acronyms-that-chris-likes-to-use-in-gitter"></span><h2>Acronyms that Chris likes to use in Gitter<a class="headerlink" href="#acronyms-that-chris-likes-to-use-in-gitter" title="Permalink to this headline">¶</a></h2>
+<p>It has been pointed out that Chris often employs the use of unusually
+long acronyms. This is a short list of translations so that the world can
+understand his unique and special mind.</p>
+<ul class="simple">
+<li><p>TYVM: Thank You Very Much</p></li>
+<li><p>SGTM: Sounds Good To Me</p></li>
+<li><p>LMKWYT: Let Me Know What You Think</p></li>
+<li><p>WDYT: What Do You Think</p></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+   <div class='prev-next-bottom'>
+     
+      <a class='left-prev' href="common_problems.html" title="previous chapter">Common problems and their solutions</a>
+      <a class='right-next' href="grafana_plots.html" title="next chapter">Some useful Grafana plots</a>
+   <div style='clear:both;'></div>
+ 
+   </div>
+
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <p class="logo"><a href="index.html">
+    <img class="logo" src="_static/logo.jpg" alt="Logo"/>
+  </a></p>
+<h1 class="logo"><a href="index.html">Site Reliability Guide for mybinder.org</a></h1>
+
+
+
+<p class="blurb">A Site Reliability Guide for mybinder.org deployment</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=jupyterhub&repo=binderhub&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<h3>Table of Contents</h3>
+<p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started with the <code class="docutils literal notranslate"><span class="pre">mybinder.org</span></code> dev team</a></li>
+<li class="toctree-l1"><a class="reference internal" href="production_environment.html">Production environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="terminology.html">Terminology for the deployment</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Deployment</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="deployment/prereqs.html">Pre-requisite technologies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment/how.html">How to deploy a change to mybinder.org?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment/what.html">What does a MyBinder.org deployment do?</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Operation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="common_problems.html">Common problems and their solutions</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Command snippets used during operations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#the-mybinder-tools-python-repository">The mybinder-tools Python repository</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cluster-management">Cluster management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pod-management">Pod management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#node-management-and-information">Node management and information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#networking">Networking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#acronyms-that-chris-likes-to-use-in-gitter">Acronyms that Chris likes to use in Gitter</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="grafana_plots.html">Some useful Grafana plots</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="components/metrics.html">Metrics collection with Prometheus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="components/dashboards.html">Operational Dashboards with Grafana</a></li>
+<li class="toctree-l1"><a class="reference internal" href="components/ingress.html">HTTPS ingress with nginx + kube-lego</a></li>
+<li class="toctree-l1"><a class="reference internal" href="components/cloud.html">Cloud products</a></li>
+<li class="toctree-l1"><a class="reference internal" href="components/matomo.html">Matomo (formerly Piwik) analytics</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="analytics/events-archive.html">The Analytics Events Archive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analytics/cloud-costs.html">Cloud Costs Data</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Incidents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="incident-reports/2019-04-03-ingress-cordoned.html">2019-04-03, 30min outage during node pool upgrade</a></li>
+<li class="toctree-l1"><a class="reference internal" href="incident-reports/2019-03-24-r2d-upgrade.html">2019-03-24, repo2docker upgrade and docker image cache wipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="incident-reports/2019-02-20-no-logs.html">incident date: 2019-02-20, kubectl logs unavailable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="incident-reports/2018-07-30-jupyterlab-build-cpu-saturate.html">2018-07-30 JupyterLab builds saturate BinderHub CPU</a></li>
+<li class="toctree-l1"><a class="reference internal" href="incident-reports/2018-07-08-podsnips-aplenty.html">2018-07-08, too many pods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="incident-reports/2018-04-18-cull-flood.html">2018-04-18, Culler flood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="incident-reports/2018-03-31-server-start-fail.html">2018-03-31, Server launch failures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="incident-reports/2018-03-26-no-space-left.html">2018-03-26, “no space left on device”</a></li>
+<li class="toctree-l1"><a class="reference internal" href="incident-reports/2018-03-13-PVC-hub-locked.html">2018-03-13, PVC for hub is locked</a></li>
+<li class="toctree-l1"><a class="reference internal" href="incident-reports/2018-02-22-nginx-down.html">2018-02-22 NGINX crash</a></li>
+<li class="toctree-l1"><a class="reference internal" href="incident-reports/2018-02-20-jupyterlab-announcement.html">2018-02-20, JupyterLab Announcement swamps Binder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="incident-reports/2018-02-12-launch-fail.html">2018-02-12, Hub Launch Fail</a></li>
+<li class="toctree-l1"><a class="reference internal" href="incident-reports/2018-01-18-reddit-hug.html">2018-01-18, reddit hugs mybinder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="incident-reports/2018-01-18-ssl-outdated.html">2018-01-11, Warning from letsencrypt about outdated SSL certificate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="incident-reports/2018-01-17-ubuntu-upgrade.html">2018-01-17, Emergency Aardvark bump</a></li>
+<li class="toctree-l1"><a class="reference internal" href="incident-reports/2018-01-04-failed-staging-deploy.html">2018-01-04, Failed deploy to staging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="incident-reports/2017-11-30-oom-proxy.html">2017-11-30 4:23PM PST, OOM (Out of Memory) Proxy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="incident-reports/2017-10-17-cluster-full.html">2017-10-17, Cluster Full</a></li>
+<li class="toctree-l1"><a class="reference internal" href="incident-reports/2017-09-29-504.html">2017-09-29, 504</a></li>
+<li class="toctree-l1"><a class="reference internal" href="incident-reports/2017-09-27-hub-403.html">2017-09-27, Hub 403</a></li>
+<li class="toctree-l1"><a class="reference internal" href="incident-reports/template-incident-report.html">Template for reports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="incident-reports/template-incident-report.html#incident-date-yyyy-mm-dd-incident-name">{{ incident date: yyyy-mm-dd }}, {{ incident name }}</a></li>
+</ul>
+
+
+<div class="relations">
+<h3>Navigation</h3>
+<ul>
+  <li><a href="index.html">Documentation Home</a><ul>
+  <li><a href="common_problems.html" title="Previous">Previous topic</a></li>
+  <li><a href="grafana_plots.html" title="Next">Next topic</a></li>
+  </ul>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/command_snippets.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+        <form class="search" action="search.html" method="get">
+            <input type="text" name="q" placeholder="Quick Search" aria-labelledby="searchlabel" />
+            <input type="submit" value="Go" />
+        </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017 - 2019, Binder Team.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/command_snippets.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

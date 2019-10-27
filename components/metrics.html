@@ -1,0 +1,325 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Metrics collection with Prometheus &#8212; Site Reliability Guide for mybinder.org 1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Operational Dashboards with Grafana" href="dashboards.html" />
+    <link rel="prev" title="Some useful Grafana plots" href="../grafana_plots.html" />
+
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<!-- Add JupyterHub styling -->
+<link rel="stylesheet" href="../_static/jupyter.css" type="text/css" />
+<link rel="shortcut icon" href="../_static/favicon.ico"/>
+
+
+  </head><body>
+<div class="rightsidebar">
+    <h3>On this page</h3>
+    <ul>
+<li><a class="reference internal" href="#">Metrics collection with Prometheus</a><ul>
+<li><a class="reference internal" href="#metrics-storage-querying">Metrics Storage + Querying</a><ul>
+<li><a class="reference internal" href="#what-is-prometheus">What is Prometheus?</a></li>
+<li><a class="reference internal" href="#querying">Querying</a></li>
+<li><a class="reference internal" href="#metrics-ingestion">Metrics Ingestion</a><ul>
+<li><a class="reference internal" href="#node-information">Node information</a></li>
+<li><a class="reference internal" href="#kubernetes-information">Kubernetes information</a></li>
+<li><a class="reference internal" href="#container-information">Container information</a></li>
+<li><a class="reference internal" href="#http-request-information">HTTP request information</a></li>
+<li><a class="reference internal" href="#binderhub-information">BinderHub information</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#configuration">Configuration</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+   <div class='prev-next-top'>
+     
+      <a class='left-prev' href="../grafana_plots.html" title="previous chapter">Previous</a>
+      <a class='right-next' href="dashboards.html" title="next chapter">Next</a>
+   <div style='clear:both;'></div>
+ 
+   </div>
+
+
+          <div class="body" role="main">
+            
+  <div class="section" id="metrics-collection-with-prometheus">
+<span id="metrics-collection-with-prometheus"></span><h1>Metrics collection with Prometheus<a class="headerlink" href="#metrics-collection-with-prometheus" title="Permalink to this headline">¶</a></h1>
+<p>We collect operational metrics about all the components of mybinder.org
+and create dashboards from them. This document details the components
+involved in collecting, storing and querying the metrics.</p>
+<p>This is only for operational metrics - <strong>not</strong> for analytics on repositories
+built or traffic.</p>
+<div class="section" id="metrics-storage-querying">
+<span id="metrics-storage-querying"></span><h2>Metrics Storage + Querying<a class="headerlink" href="#metrics-storage-querying" title="Permalink to this headline">¶</a></h2>
+<p>We use <a class="reference external" href="https://prometheus.io/">Prometheus</a> to store and query our metrics.</p>
+<div class="section" id="what-is-prometheus">
+<span id="what-is-prometheus"></span><h3>What is Prometheus?<a class="headerlink" href="#what-is-prometheus" title="Permalink to this headline">¶</a></h3>
+<p>Prometheus is a <a class="reference external" href="https://en.wikipedia.org/wiki/Time_series_database">Time Series Database</a>
+optimized for storing operational metrics. It stores all data as
+streams of timestamped values belonging to the same <strong>metric</strong> and the
+same set of <strong>labels</strong>.</p>
+<p>The <strong>metric name</strong> specifies the general feature of a system that is
+measured (e.g. <code class="docutils literal notranslate"><span class="pre">http_requests_total</span></code> - the total number of HTTP requests received).</p>
+<p>A set of labels for the same metric name identifies a particular
+dimensional instantiation of that metric (for example: all HTTP requests
+that used the method <code class="docutils literal notranslate"><span class="pre">POST</span></code> to the <code class="docutils literal notranslate"><span class="pre">/api/tracks</span></code> handler would be represented
+as the time series <code class="docutils literal notranslate"><span class="pre">http_requests_total{method=&quot;POST&quot;,</span> <span class="pre">handler=&quot;/api/tracks&quot;}</span></code>).</p>
+<p>The prometheus documentation has more information on its
+<a class="reference external" href="https://prometheus.io/docs/concepts/data_model/">data model</a> and the different
+<a class="reference external" href="https://prometheus.io/docs/concepts/metric_types/">kinds of time series</a> available.
+These two pages are fairly short and are highly recommended reading!</p>
+</div>
+<div class="section" id="querying">
+<span id="querying"></span><h3>Querying<a class="headerlink" href="#querying" title="Permalink to this headline">¶</a></h3>
+<p>Prometheus has its own query language called
+<a class="reference external" href="https://prometheus.io/docs/prometheus/latest/querying/basics/">PromQL</a>,
+optimized for time series queries.</p>
+<p>The prometheus documentation has fairly clear and thorough documentation
+on PromQL - <a class="reference external" href="https://prometheus.io/docs/prometheus/latest/querying/basics/">basics</a>,
+<a class="reference external" href="https://prometheus.io/docs/prometheus/latest/querying/operators/">operators</a>
+and <a class="reference external" href="https://prometheus.io/docs/prometheus/latest/querying/functions/">functions</a>.
+You do not need to become an expert, but a basic understanding is useful.
+There are also <a class="reference external" href="https://prometheus.io/docs/prometheus/latest/querying/examples/">examples</a>
+to pick up and play with!</p>
+<p><a class="reference external" href="https://prometheus.mybinder.org">prometheus.mybinder.org</a> is our public
+prometheus installation, and you can practice your queries there!</p>
+</div>
+<div class="section" id="metrics-ingestion">
+<span id="metrics-ingestion"></span><h3>Metrics Ingestion<a class="headerlink" href="#metrics-ingestion" title="Permalink to this headline">¶</a></h3>
+<p>Prometheus uses a <strong>pull</strong> model for metrics. It has a list of
+targets, and constantly polls them for their current state, and
+records what it gets back. The targets are supposed to respond
+to these HTTP requests with data in the
+<a class="reference external" href="https://prometheus.io/docs/instrumenting/exposition_formats/">prometheus format</a>.</p>
+<p>Our data is currently sourced from the following targets.</p>
+<div class="section" id="node-information">
+<span id="node-information"></span><h4>Node information<a class="headerlink" href="#node-information" title="Permalink to this headline">¶</a></h4>
+<p>The <a class="reference external" href="https://github.com/prometheus/node_exporter">node_exporter</a> exports
+information about each node we run - CPU usage, memory left, disk space,
+etc. It provides fairly detailed info, usually prefixed with <code class="docutils literal notranslate"><span class="pre">node_</span></code>.
+This is not kubernetes specific.</p>
+</div>
+<div class="section" id="kubernetes-information">
+<span id="kubernetes-information"></span><h4>Kubernetes information<a class="headerlink" href="#kubernetes-information" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference external" href="https://github.com/kubernetes/kube-state-metrics">kube-state-metrics</a>
+exposes information about the kubernetes cluster - such as number of pods
+and the states they are in, number of nodes, etc. These are usually
+prefixed with <code class="docutils literal notranslate"><span class="pre">kube_</span></code>.</p>
+<p>These only contain information from kubernetes API itself. For example,
+‘how much RAM are these containers using’ is not recorded by <code class="docutils literal notranslate"><span class="pre">kube-state-metrics</span></code>,
+since that is not information that is available to the Kubernetes API.
+‘how much RAM are these pods requesting’ is, however, available.</p>
+</div>
+<div class="section" id="container-information">
+<span id="container-information"></span><h4>Container information<a class="headerlink" href="#container-information" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference external" href="https://github.com/google/cadvisor">cadvisor</a> provides detailed runtime
+information about all the containers running in the cluster. This is information
+mostly not available from <code class="docutils literal notranslate"><span class="pre">kube-state-metrics</span></code> - such as ‘how much RAM are
+these containers using right now’, etc. These are usually prefixed with
+<code class="docutils literal notranslate"><span class="pre">container_</span></code>.</p>
+</div>
+<div class="section" id="http-request-information">
+<span id="http-request-information"></span><h4>HTTP request information<a class="headerlink" href="#http-request-information" title="Permalink to this headline">¶</a></h4>
+<p>We use the <a class="reference external" href="https://github.com/kubernetes/charts/tree/master/stable/nginx-ingress">nginx-ingress helm chart</a>
+to let all HTTP traffic into our cluster. This allows us to use
+the <a class="reference external" href="https://hnlq715.github.io/nginx-vts-exporter/">nginx VTS exporter</a>
+to collect information in prometheus about requests / responses.
+These metrics are prefixed with <code class="docutils literal notranslate"><span class="pre">nginx_</span></code>.</p>
+</div>
+<div class="section" id="binderhub-information">
+<span id="binderhub-information"></span><h4>BinderHub information<a class="headerlink" href="#binderhub-information" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference external" href="http://github.com/jupyterhub/binderhub">BinderHub</a> itself exposes
+metrics about its operations in the prometheus format, using
+the <a class="reference external" href="https://github.com/prometheus/client_python">python prometheus client library</a>.
+These are currently somewhat limited, and prefixed with <code class="docutils literal notranslate"><span class="pre">binderhub_</span></code></p>
+</div>
+</div>
+<div class="section" id="configuration">
+<span id="configuration"></span><h3>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h3>
+<p>Prometheus is installed using the
+<a class="reference external" href="https://github.com/kubernetes/charts/tree/master/stable/prometheus">prometheus helm chart</a>.
+This installs the following components:</p>
+<ol class="simple">
+<li><p>Prometheus server (storage + querying)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">node_exporter</span></code> on every node</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">kube-state-metrics</span></code> instance</p></li>
+</ol>
+<p><code class="docutils literal notranslate"><span class="pre">cadvisor</span></code> is already present on all nodes (it ships with the <code class="docutils literal notranslate"><span class="pre">kubelet</span></code>
+kubernetes component), and the prometheus helm chart has configuration
+that adds those as targets.</p>
+<p>You can see the available options for configuring the prometheus
+helm chart in its <a class="reference external" href="https://github.com/kubernetes/charts/blob/master/stable/prometheus/values.yaml">values.yaml</a>
+file. You can see the current configuration we have under the <code class="docutils literal notranslate"><span class="pre">prometheus</span></code>
+section of <code class="docutils literal notranslate"><span class="pre">mybinder/values.yaml</span></code>, <code class="docutils literal notranslate"><span class="pre">config/prod.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">config/staging.yaml</span></code>.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+   <div class='prev-next-bottom'>
+     
+      <a class='left-prev' href="../grafana_plots.html" title="previous chapter">Some useful Grafana plots</a>
+      <a class='right-next' href="dashboards.html" title="next chapter">Operational Dashboards with Grafana</a>
+   <div style='clear:both;'></div>
+ 
+   </div>
+
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <p class="logo"><a href="../index.html">
+    <img class="logo" src="../_static/logo.jpg" alt="Logo"/>
+  </a></p>
+<h1 class="logo"><a href="../index.html">Site Reliability Guide for mybinder.org</a></h1>
+
+
+
+<p class="blurb">A Site Reliability Guide for mybinder.org deployment</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=jupyterhub&repo=binderhub&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<h3>Table of Contents</h3>
+<p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting started with the <code class="docutils literal notranslate"><span class="pre">mybinder.org</span></code> dev team</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../production_environment.html">Production environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../terminology.html">Terminology for the deployment</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Deployment</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/prereqs.html">Pre-requisite technologies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/how.html">How to deploy a change to mybinder.org?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/what.html">What does a MyBinder.org deployment do?</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Operation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../common_problems.html">Common problems and their solutions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../command_snippets.html">Command snippets used during operations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../grafana_plots.html">Some useful Grafana plots</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Metrics collection with Prometheus</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#metrics-storage-querying">Metrics Storage + Querying</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dashboards.html">Operational Dashboards with Grafana</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ingress.html">HTTPS ingress with nginx + kube-lego</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cloud.html">Cloud products</a></li>
+<li class="toctree-l1"><a class="reference internal" href="matomo.html">Matomo (formerly Piwik) analytics</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../analytics/events-archive.html">The Analytics Events Archive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analytics/cloud-costs.html">Cloud Costs Data</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Incidents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2019-04-03-ingress-cordoned.html">2019-04-03, 30min outage during node pool upgrade</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2019-03-24-r2d-upgrade.html">2019-03-24, repo2docker upgrade and docker image cache wipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2019-02-20-no-logs.html">incident date: 2019-02-20, kubectl logs unavailable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-07-30-jupyterlab-build-cpu-saturate.html">2018-07-30 JupyterLab builds saturate BinderHub CPU</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-07-08-podsnips-aplenty.html">2018-07-08, too many pods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-04-18-cull-flood.html">2018-04-18, Culler flood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-03-31-server-start-fail.html">2018-03-31, Server launch failures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-03-26-no-space-left.html">2018-03-26, “no space left on device”</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-03-13-PVC-hub-locked.html">2018-03-13, PVC for hub is locked</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-02-22-nginx-down.html">2018-02-22 NGINX crash</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-02-20-jupyterlab-announcement.html">2018-02-20, JupyterLab Announcement swamps Binder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-02-12-launch-fail.html">2018-02-12, Hub Launch Fail</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-01-18-reddit-hug.html">2018-01-18, reddit hugs mybinder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-01-18-ssl-outdated.html">2018-01-11, Warning from letsencrypt about outdated SSL certificate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-01-17-ubuntu-upgrade.html">2018-01-17, Emergency Aardvark bump</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-01-04-failed-staging-deploy.html">2018-01-04, Failed deploy to staging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2017-11-30-oom-proxy.html">2017-11-30 4:23PM PST, OOM (Out of Memory) Proxy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2017-10-17-cluster-full.html">2017-10-17, Cluster Full</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2017-09-29-504.html">2017-09-29, 504</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2017-09-27-hub-403.html">2017-09-27, Hub 403</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/template-incident-report.html">Template for reports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/template-incident-report.html#incident-date-yyyy-mm-dd-incident-name">{{ incident date: yyyy-mm-dd }}, {{ incident name }}</a></li>
+</ul>
+
+
+<div class="relations">
+<h3>Navigation</h3>
+<ul>
+  <li><a href="../index.html">Documentation Home</a><ul>
+  <li><a href="../grafana_plots.html" title="Previous">Previous topic</a></li>
+  <li><a href="dashboards.html" title="Next">Next topic</a></li>
+  </ul>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/components/metrics.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+        <form class="search" action="../search.html" method="get">
+            <input type="text" name="q" placeholder="Quick Search" aria-labelledby="searchlabel" />
+            <input type="submit" value="Go" />
+        </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017 - 2019, Binder Team.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/components/metrics.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

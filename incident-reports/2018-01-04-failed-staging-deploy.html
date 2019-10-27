@@ -1,0 +1,288 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>2018-01-04, Failed deploy to staging &#8212; Site Reliability Guide for mybinder.org 1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="2017-11-30 4:23PM PST, OOM (Out of Memory) Proxy" href="2017-11-30-oom-proxy.html" />
+    <link rel="prev" title="2018-01-17, Emergency Aardvark bump" href="2018-01-17-ubuntu-upgrade.html" />
+
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<!-- Add JupyterHub styling -->
+<link rel="stylesheet" href="../_static/jupyter.css" type="text/css" />
+<link rel="shortcut icon" href="../_static/favicon.ico"/>
+
+
+  </head><body>
+<div class="rightsidebar">
+    <h3>On this page</h3>
+    <ul>
+<li><a class="reference internal" href="#">2018-01-04, Failed deploy to staging</a><ul>
+<li><a class="reference internal" href="#summary">Summary</a></li>
+<li><a class="reference internal" href="#timeline">Timeline</a><ul>
+<li><a class="reference internal" href="#">2018-01-04 07:33</a></li>
+<li><a class="reference internal" href="#">08:03</a></li>
+<li><a class="reference internal" href="#">08:17</a></li>
+<li><a class="reference internal" href="#">08:25</a></li>
+<li><a class="reference internal" href="#">08:27</a></li>
+<li><a class="reference internal" href="#">08:34</a></li>
+<li><a class="reference internal" href="#">08:59</a></li>
+<li><a class="reference internal" href="#">11:31</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#action-items">Action items</a><ul>
+<li><a class="reference internal" href="#process">Process</a></li>
+<li><a class="reference internal" href="#mybinder-org-deploy">mybinder.org-deploy</a></li>
+<li><a class="reference internal" href="#helm-chart">helm-chart</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+   <div class='prev-next-top'>
+     
+      <a class='left-prev' href="2018-01-17-ubuntu-upgrade.html" title="previous chapter">Previous</a>
+      <a class='right-next' href="2017-11-30-oom-proxy.html" title="next chapter">Next</a>
+   <div style='clear:both;'></div>
+ 
+   </div>
+
+
+          <div class="body" role="main">
+            
+  <div class="section" id="failed-deploy-to-staging">
+<span id="failed-deploy-to-staging"></span><h1>2018-01-04, Failed deploy to staging<a class="headerlink" href="#failed-deploy-to-staging" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="summary">
+<span id="summary"></span><h2>Summary<a class="headerlink" href="#summary" title="Permalink to this headline">¶</a></h2>
+<p>Merging a PR into BinderHub and deploying that change to <code class="docutils literal notranslate"><span class="pre">mybinder.org</span></code> staging in a second PR resulted in a Travis error. It also led to user uncertainty about the steps to resolve the error. User misunderstanding of the correct commit SHA to use for the binderhub helm-chart was one part of the problem. Flakiness of Travis deployment due to insufficient waiting for helm-chart deployments contributed to the problem. Though time consuming to determine the cause of the Travis error, there was no loss of production service due to current workflow and the staging-prod workflow served its main purpose well.</p>
+</div>
+<div class="section" id="timeline">
+<span id="timeline"></span><h2>Timeline<a class="headerlink" href="#timeline" title="Permalink to this headline">¶</a></h2>
+<p>All times in PST</p>
+<div class="section" id="">
+<span id="id1"></span><h3>2018-01-04 07:33<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Reviewed and merged BinderHub PR <a class="reference external" href="https://github.com/jupyterhub/binderhub/pull/395">#395</a>. Min’s PR commit 441f5ea. Merge commit 4e3bafb.</p>
+</div>
+<div class="section" id="">
+<span id="id2"></span><h3>08:03<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>PR <a class="reference external" href="https://github.com/jupyterhub/mybinder.org-deploy/pull/254">#254</a> failed to deploy to staging.</p>
+<p><a class="reference external" href="https://travis-ci.org/jupyterhub/mybinder.org-deploy/builds/325095814">Travis CI</a> errored and displayed that the deploy to staging failed.</p>
+<p>PR #254 was generated using the first set of instructions in the <code class="docutils literal notranslate"><span class="pre">README</span></code>, <a class="reference external" href="https://github.com/jupyterhub/mybinder.org-deploy#deploying-a-change">Deploying a Change</a>. <em>Note: User error was made here by assuming the SHA used in the BinderHub helm-chart (binderhub-0.1.0-441f5ea) was the same as the PR in the BinderHub merge commit (4e3bafb). The assumption was that Travis would deploy the binderhub change to the helm-chart repo using the merge commit hash. The Documentation in the <code class="docutils literal notranslate"><span class="pre">README</span></code>’s <a class="reference external" href="https://github.com/jupyterhub/mybinder.org-deploy#binderhub">BinderHub</a> section has this correct, but the user didn’t think to scroll down as they had done the deployment process before but not on a regular basis.</em></p>
+<p>Investigation begins.</p>
+</div>
+<div class="section" id="">
+<span id="id3"></span><h3>08:17<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Following the process in the <code class="docutils literal notranslate"><span class="pre">README</span></code>, I reverted the original PR since Travis showed an error. PR <a class="reference external" href="https://github.com/jupyterhub/mybinder.org-deploy/pull/255">#255</a> reverted #254.</p>
+</div>
+<div class="section" id="">
+<span id="id4"></span><h3>08:25<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Message posted on Gitter to understand why Travis had errored since it seemed to be a very simple change bumping the BinderHub version.</p>
+</div>
+<div class="section" id="">
+<span id="id5"></span><h3>08:27<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Response posted on Gitter that Travis often fails to deploy. A restart of the Travis job usually resolves the error.</p>
+</div>
+<div class="section" id="">
+<span id="id6"></span><h3>08:34<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Message posted on Gitter to understand why the merge SHA (4e3bafb) was not found in a binderhub helm-chart.</p>
+<p>From the Gitter response, user learned that there is a delay in the helm-chart showing up. User realizes that I also made an incorrect assumption about the hash to use in the PR for binderhub helm-chart. The correct SHA to use would be the last commit where the relevant files changed (441f5ea) which is not the same as the most recent commit (4e3bafb).</p>
+</div>
+<div class="section" id="">
+<span id="id7"></span><h3>08:59<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Submitted a new PR <a class="reference external" href="https://github.com/jupyterhub/mybinder.org-deploy/pull/256">#256</a> to staging with the correct hash. Travis deploys successfully to staging. Visual review of <code class="docutils literal notranslate"><span class="pre">staging.mybinder.org</span></code> site looks fine.</p>
+</div>
+<div class="section" id="">
+<span id="id8"></span><h3>11:31<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Deployed to Prod with PR <a class="reference external" href="https://github.com/jupyterhub/mybinder.org-deploy/pull/257">#257</a>. Travis deploys successfully.</p>
+<p>Tested repo, <code class="docutils literal notranslate"><span class="pre">willingc/ThinkDSP</span></code>, using the prod service to see if the notebook would launch. All seemed working on the sample notebook launch. Also checked Grafana dashboard to see if there was any disruption in activity.</p>
+<p>Everything is fine and prod is working.</p>
+</div>
+</div>
+<div class="section" id="action-items">
+<span id="action-items"></span><h2>Action items<a class="headerlink" href="#action-items" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="process">
+<span id="process"></span><h3>Process<a class="headerlink" href="#process" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Minimize tribal knowledge in the deployment process (i.e. all may not know that restarting a failed Travis build may clear the error.).</p></li>
+<li><p>Simplify steps into a checklist especially ones that require human lookup of information or copy/paste.</p></li>
+</ul>
+</div>
+<div class="section" id="mybinder-org-deploy">
+<span id="mybinder-org-deploy"></span><h3>mybinder.org-deploy<a class="headerlink" href="#mybinder-org-deploy" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Minimize copy-paste errors by user</p></li>
+<li><p>Add a “deployment to staging” checklist and a “deployment to prod” checklist to the documentation (possibly as files distinct from the <code class="docutils literal notranslate"><span class="pre">README</span></code>.)</p></li>
+<li><p>Add a better way to self diagnose whether the Travis failure is legitimate or spurious.</p></li>
+<li><p>Look into generating a commit for bumping without human entry of data (review by a human is fine)</p></li>
+</ul>
+</div>
+<div class="section" id="helm-chart">
+<span id="helm-chart"></span><h3>helm-chart<a class="headerlink" href="#helm-chart" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Document in the helm chart repo as well as mybinder.org-deploy that the deployment of the helm-chart may be delayed. Users should wait approximately ‘x’ minutes before opening a PR on staging.</p></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+   <div class='prev-next-bottom'>
+     
+      <a class='left-prev' href="2018-01-17-ubuntu-upgrade.html" title="previous chapter">2018-01-17, Emergency Aardvark bump</a>
+      <a class='right-next' href="2017-11-30-oom-proxy.html" title="next chapter">2017-11-30 4:23PM PST, OOM (Out of Memory) Proxy</a>
+   <div style='clear:both;'></div>
+ 
+   </div>
+
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <p class="logo"><a href="../index.html">
+    <img class="logo" src="../_static/logo.jpg" alt="Logo"/>
+  </a></p>
+<h1 class="logo"><a href="../index.html">Site Reliability Guide for mybinder.org</a></h1>
+
+
+
+<p class="blurb">A Site Reliability Guide for mybinder.org deployment</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=jupyterhub&repo=binderhub&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<h3>Table of Contents</h3>
+<p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting started with the <code class="docutils literal notranslate"><span class="pre">mybinder.org</span></code> dev team</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../production_environment.html">Production environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../terminology.html">Terminology for the deployment</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Deployment</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/prereqs.html">Pre-requisite technologies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/how.html">How to deploy a change to mybinder.org?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/what.html">What does a MyBinder.org deployment do?</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Operation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../common_problems.html">Common problems and their solutions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../command_snippets.html">Command snippets used during operations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../grafana_plots.html">Some useful Grafana plots</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../components/metrics.html">Metrics collection with Prometheus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/dashboards.html">Operational Dashboards with Grafana</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/ingress.html">HTTPS ingress with nginx + kube-lego</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/cloud.html">Cloud products</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/matomo.html">Matomo (formerly Piwik) analytics</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../analytics/events-archive.html">The Analytics Events Archive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analytics/cloud-costs.html">Cloud Costs Data</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Incidents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="2019-04-03-ingress-cordoned.html">2019-04-03, 30min outage during node pool upgrade</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2019-03-24-r2d-upgrade.html">2019-03-24, repo2docker upgrade and docker image cache wipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2019-02-20-no-logs.html">incident date: 2019-02-20, kubectl logs unavailable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-07-30-jupyterlab-build-cpu-saturate.html">2018-07-30 JupyterLab builds saturate BinderHub CPU</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-07-08-podsnips-aplenty.html">2018-07-08, too many pods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-04-18-cull-flood.html">2018-04-18, Culler flood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-03-31-server-start-fail.html">2018-03-31, Server launch failures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-03-26-no-space-left.html">2018-03-26, “no space left on device”</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-03-13-PVC-hub-locked.html">2018-03-13, PVC for hub is locked</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-02-22-nginx-down.html">2018-02-22 NGINX crash</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-02-20-jupyterlab-announcement.html">2018-02-20, JupyterLab Announcement swamps Binder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-02-12-launch-fail.html">2018-02-12, Hub Launch Fail</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-01-18-reddit-hug.html">2018-01-18, reddit hugs mybinder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-01-18-ssl-outdated.html">2018-01-11, Warning from letsencrypt about outdated SSL certificate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-01-17-ubuntu-upgrade.html">2018-01-17, Emergency Aardvark bump</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">2018-01-04, Failed deploy to staging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2017-11-30-oom-proxy.html">2017-11-30 4:23PM PST, OOM (Out of Memory) Proxy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2017-10-17-cluster-full.html">2017-10-17, Cluster Full</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2017-09-29-504.html">2017-09-29, 504</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2017-09-27-hub-403.html">2017-09-27, Hub 403</a></li>
+<li class="toctree-l1"><a class="reference internal" href="template-incident-report.html">Template for reports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="template-incident-report.html#incident-date-yyyy-mm-dd-incident-name">{{ incident date: yyyy-mm-dd }}, {{ incident name }}</a></li>
+</ul>
+
+
+<div class="relations">
+<h3>Navigation</h3>
+<ul>
+  <li><a href="../index.html">Documentation Home</a><ul>
+  <li><a href="2018-01-17-ubuntu-upgrade.html" title="Previous">Previous topic</a></li>
+  <li><a href="2017-11-30-oom-proxy.html" title="Next">Next topic</a></li>
+  </ul>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/incident-reports/2018-01-04-failed-staging-deploy.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+        <form class="search" action="../search.html" method="get">
+            <input type="text" name="q" placeholder="Quick Search" aria-labelledby="searchlabel" />
+            <input type="submit" value="Go" />
+        </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017 - 2019, Binder Team.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/incident-reports/2018-01-04-failed-staging-deploy.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

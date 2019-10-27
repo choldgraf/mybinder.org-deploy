@@ -1,0 +1,315 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>HTTPS ingress with nginx + kube-lego &#8212; Site Reliability Guide for mybinder.org 1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Cloud products" href="cloud.html" />
+    <link rel="prev" title="Operational Dashboards with Grafana" href="dashboards.html" />
+
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<!-- Add JupyterHub styling -->
+<link rel="stylesheet" href="../_static/jupyter.css" type="text/css" />
+<link rel="shortcut icon" href="../_static/favicon.ico"/>
+
+
+  </head><body>
+<div class="rightsidebar">
+    <h3>On this page</h3>
+    <ul>
+<li><a class="reference internal" href="#">HTTPS ingress with nginx + kube-lego</a><ul>
+<li><a class="reference internal" href="#nginx-ingress">Nginx Ingress</a><ul>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#configuration-with-ingress-objects">Configuration with Ingress objects</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#https-certificates-with-kube-lego">HTTPS certificates with kube-lego</a><ul>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#configuration">Configuration</a></li>
+<li><a class="reference internal" href="#let-s-encrypt-account">Let’s Encrypt account</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+   <div class='prev-next-top'>
+     
+      <a class='left-prev' href="dashboards.html" title="previous chapter">Previous</a>
+      <a class='right-next' href="cloud.html" title="next chapter">Next</a>
+   <div style='clear:both;'></div>
+ 
+   </div>
+
+
+          <div class="body" role="main">
+            
+  <div class="section" id="https-ingress-with-nginx-kube-lego">
+<span id="https-ingress-with-nginx-kube-lego"></span><h1>HTTPS ingress with nginx + kube-lego<a class="headerlink" href="#https-ingress-with-nginx-kube-lego" title="Permalink to this headline">¶</a></h1>
+<p>Kubernetes <a class="reference external" href="https://kubernetes.io/docs/concepts/services-networking/ingress/">Ingress Objects</a>
+are used to manage HTTP(S) access from the internet to inside the Kubernetes cluster.
+Among other things, it lets us do the following:</p>
+<ol class="simple">
+<li><p>Provide a HTTPS end point so users can connect to us securely</p></li>
+<li><p>Direct traffic to various Services based on hostnames or URL paths</p></li>
+<li><p>Allow using one public IP address for multiple domain names</p></li>
+</ol>
+<p>We use the <a class="reference external" href="https://github.com/kubernetes/ingress-nginx">nginx-ingress</a> provider to handle
+our Ingress needs.</p>
+<div class="section" id="nginx-ingress">
+<span id="nginx-ingress"></span><h2>Nginx Ingress<a class="headerlink" href="#nginx-ingress" title="Permalink to this headline">¶</a></h2>
+<p>We run on Google Cloud’s Kubernetes Engine. Even though GKE comes pre-installed with
+the <a class="reference external" href="https://github.com/kubernetes/ingress-gce">Google Cloud Load Balancer Ingress provider</a>,
+we decided to use nginx instead for the following reasons:</p>
+<ol class="simple">
+<li><p>GCLB has a 30s default timeout on all HTTP connections. This is counted
+not just when connection is idle, but from connection start time. This
+is particularly bad for websockets, since those connections usually last for
+a lot longer than 30s! There is no easy way to configure this timeout from
+inside Kubernetes.</p></li>
+<li><p>GCLB does not guarantee you can use the same IP for multiple domains. We
+want the various subdomains of <code class="docutils literal notranslate"><span class="pre">mybinder.org</span></code> to point to the same IP
+so we can easily add / remove new services without waiting for DNS propagation
+delay.</p></li>
+</ol>
+<div class="section" id="installation">
+<span id="installation"></span><h3>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h3>
+<p>nginx-ingress is installed using the <a class="reference external" href="https://github.com/kubernetes/charts/tree/master/stable/nginx-ingress">nginx-ingress helm chart</a>.
+This installs the following components:</p>
+<ol class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">nginx-ingress-controller</span></code> - keeps the HTTPS rules in sync with <code class="docutils literal notranslate"><span class="pre">Ingress</span></code>
+objects and serves the HTTPS requests. This also exports
+<a class="reference external" href="components/metrics.html">metrics</a> that are captured in prometheus.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nginx-ingress-default-backend</span></code> - simply returns a 404 error &amp; is used
+by <code class="docutils literal notranslate"><span class="pre">nginx-ingress-controller</span></code> to serve any requests that don’t match
+any rules.</p></li>
+</ol>
+<p>The specific ways these have been configured can be seen in the <code class="docutils literal notranslate"><span class="pre">mybinder/values.yaml</span></code>
+file in this repo, under <code class="docutils literal notranslate"><span class="pre">nginx-ingress</span></code>.</p>
+</div>
+<div class="section" id="configuration-with-ingress-objects">
+<span id="configuration-with-ingress-objects"></span><h3>Configuration with Ingress objects<a class="headerlink" href="#configuration-with-ingress-objects" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">Ingress</span></code> objects are used to tell the ingress controllers which requests
+should be routed to which <code class="docutils literal notranslate"><span class="pre">Service</span></code> objects. Usually, the rules either
+check for a hostname (like <code class="docutils literal notranslate"><span class="pre">mybinder.org</span></code> or <code class="docutils literal notranslate"><span class="pre">prometheus.mybinder.org</span></code>) and/or
+a URL prefix (like <code class="docutils literal notranslate"><span class="pre">/metrics</span></code> or <code class="docutils literal notranslate"><span class="pre">/docs</span></code>). You can see all the ingress objects
+present with <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">--namespace=prod</span> <span class="pre">get</span> <span class="pre">ingress</span></code>.</p>
+<p>The following ingress objects currently exist:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">jupyterhub</span></code> - Directs traffic to <code class="docutils literal notranslate"><span class="pre">hub.mybinder.org</span></code>.
+The zero-to-jupyterhub guide has more <a class="reference external" href="https://zero-to-jupyterhub.readthedocs.io/en/latest/advanced.html#ingress">documentation</a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">binderhub</span></code> - Directs traffic to <code class="docutils literal notranslate"><span class="pre">mybinder.org</span></code>. You can find more details
+about this in the <a class="reference external" href="https://github.com/jupyterhub/binderhub/tree/master/helm-chart">binderhub helm chart</a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">redirector</span></code> - Directs traffic to the HTTP redirector we run for <code class="docutils literal notranslate"><span class="pre">mybinder.org</span></code>.
+This helps do redirects such as <code class="docutils literal notranslate"><span class="pre">docs.mybinder.org</span></code> or <code class="docutils literal notranslate"><span class="pre">beta.mybinder.org</span></code>.
+The list of redirects is configured in <code class="docutils literal notranslate"><span class="pre">mybinder/values.yaml</span></code>. The code
+for this is in <code class="docutils literal notranslate"><span class="pre">mybinder/templates/redirector</span></code> in this repo.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">static</span></code> - Directs traffic into <code class="docutils literal notranslate"><span class="pre">static.mybinder.org</span></code>. We serve the <code class="docutils literal notranslate"><span class="pre">mybinder.org</span></code>
+badges from a different domain for <a class="reference external" href="https://github.com/jupyterhub/binderhub/issues/379">privacy reasons</a>.
+This ingress lets us direct traffic only from <code class="docutils literal notranslate"><span class="pre">static.mybinder.org/badge.svg</span></code> to the
+binder pod.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">prometheus-server</span></code> - Directs traffic to <code class="docutils literal notranslate"><span class="pre">prometheus.mybinder.org</span></code>. Configured under
+<code class="docutils literal notranslate"><span class="pre">prometheus</span></code> in both <code class="docutils literal notranslate"><span class="pre">mybinder/values.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">config/prod.yaml</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">grafana</span></code> - Directs traffic to <code class="docutils literal notranslate"><span class="pre">grafana.mybinder.org</span></code>. Configured under <code class="docutils literal notranslate"><span class="pre">grafana</span></code> in
+both <code class="docutils literal notranslate"><span class="pre">mybinder/values.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">config/prod.yaml</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">kube-lego-nginx</span></code> - Used by <a class="reference external" href="#https-with-kube-lego">kube-lego</a> for doing automatic
+HTTPS certificate renewals.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="https-certificates-with-kube-lego">
+<span id="https-certificates-with-kube-lego"></span><h2>HTTPS certificates with kube-lego<a class="headerlink" href="#https-certificates-with-kube-lego" title="Permalink to this headline">¶</a></h2>
+<p>We use <a class="reference external" href="https://letsencrypt.org/">Let’s Encrypt</a> for all our HTTPS certificates.
+<a class="reference external" href="https://github.com/jetstack/kube-lego">Kube Lego</a> is used to automatically
+provision and maintain HTTPS certificates for us.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Kube-lego is deprecated, and we should move to
+<a class="reference external" href="https://github.com/jetstack/cert-manager/">cert-manager</a> soon.</p>
+</div>
+<div class="section" id="installation">
+<span id="id1"></span><h3>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h3>
+<p>kube-lego is installed using the <a class="reference external" href="https://github.com/kubernetes/charts/tree/master/stable/kube-lego">kube-lego</a>.</p>
+</div>
+<div class="section" id="configuration">
+<span id="configuration"></span><h3>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">kube-lego</span></code> requires Ingress objects to have specific <code class="docutils literal notranslate"><span class="pre">annotations</span></code> and
+<code class="docutils literal notranslate"><span class="pre">tls</span></code> values, as <a class="reference external" href="https://github.com/jetstack/kube-lego#how-kube-lego-works">documented here</a>.
+We specify this for all our ingress objects, mostly by customizing various helm charts
+in <code class="docutils literal notranslate"><span class="pre">mybinder/values.yaml</span></code>.</p>
+</div>
+<div class="section" id="let-s-encrypt-account">
+<span id="let-s-encrypt-account"></span><h3>Let’s Encrypt account<a class="headerlink" href="#let-s-encrypt-account" title="Permalink to this headline">¶</a></h3>
+<p>Let’s Encrypt uses <a class="reference external" href="https://community.letsencrypt.org/t/what-are-accounts-do-i-need-to-backup-them/21318">accounts</a>
+to keep track of HTTPS certificates &amp; expiry dates.
+Currently, the account is registered to <code class="docutils literal notranslate"><span class="pre">yuvipanda&#64;gmail.com</span></code>, mostly as a historical
+accident. Changing it requires some amount of care to make sure we do not suffer
+intermittent HTTPS failure, and should be done whenever we switch to cert-manager.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+   <div class='prev-next-bottom'>
+     
+      <a class='left-prev' href="dashboards.html" title="previous chapter">Operational Dashboards with Grafana</a>
+      <a class='right-next' href="cloud.html" title="next chapter">Cloud products</a>
+   <div style='clear:both;'></div>
+ 
+   </div>
+
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <p class="logo"><a href="../index.html">
+    <img class="logo" src="../_static/logo.jpg" alt="Logo"/>
+  </a></p>
+<h1 class="logo"><a href="../index.html">Site Reliability Guide for mybinder.org</a></h1>
+
+
+
+<p class="blurb">A Site Reliability Guide for mybinder.org deployment</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=jupyterhub&repo=binderhub&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<h3>Table of Contents</h3>
+<p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting started with the <code class="docutils literal notranslate"><span class="pre">mybinder.org</span></code> dev team</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../production_environment.html">Production environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../terminology.html">Terminology for the deployment</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Deployment</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/prereqs.html">Pre-requisite technologies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/how.html">How to deploy a change to mybinder.org?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/what.html">What does a MyBinder.org deployment do?</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Operation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../common_problems.html">Common problems and their solutions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../command_snippets.html">Command snippets used during operations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../grafana_plots.html">Some useful Grafana plots</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="metrics.html">Metrics collection with Prometheus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dashboards.html">Operational Dashboards with Grafana</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">HTTPS ingress with nginx + kube-lego</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#nginx-ingress">Nginx Ingress</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#https-certificates-with-kube-lego">HTTPS certificates with kube-lego</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cloud.html">Cloud products</a></li>
+<li class="toctree-l1"><a class="reference internal" href="matomo.html">Matomo (formerly Piwik) analytics</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../analytics/events-archive.html">The Analytics Events Archive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analytics/cloud-costs.html">Cloud Costs Data</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Incidents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2019-04-03-ingress-cordoned.html">2019-04-03, 30min outage during node pool upgrade</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2019-03-24-r2d-upgrade.html">2019-03-24, repo2docker upgrade and docker image cache wipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2019-02-20-no-logs.html">incident date: 2019-02-20, kubectl logs unavailable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-07-30-jupyterlab-build-cpu-saturate.html">2018-07-30 JupyterLab builds saturate BinderHub CPU</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-07-08-podsnips-aplenty.html">2018-07-08, too many pods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-04-18-cull-flood.html">2018-04-18, Culler flood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-03-31-server-start-fail.html">2018-03-31, Server launch failures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-03-26-no-space-left.html">2018-03-26, “no space left on device”</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-03-13-PVC-hub-locked.html">2018-03-13, PVC for hub is locked</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-02-22-nginx-down.html">2018-02-22 NGINX crash</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-02-20-jupyterlab-announcement.html">2018-02-20, JupyterLab Announcement swamps Binder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-02-12-launch-fail.html">2018-02-12, Hub Launch Fail</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-01-18-reddit-hug.html">2018-01-18, reddit hugs mybinder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-01-18-ssl-outdated.html">2018-01-11, Warning from letsencrypt about outdated SSL certificate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-01-17-ubuntu-upgrade.html">2018-01-17, Emergency Aardvark bump</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-01-04-failed-staging-deploy.html">2018-01-04, Failed deploy to staging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2017-11-30-oom-proxy.html">2017-11-30 4:23PM PST, OOM (Out of Memory) Proxy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2017-10-17-cluster-full.html">2017-10-17, Cluster Full</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2017-09-29-504.html">2017-09-29, 504</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2017-09-27-hub-403.html">2017-09-27, Hub 403</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/template-incident-report.html">Template for reports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/template-incident-report.html#incident-date-yyyy-mm-dd-incident-name">{{ incident date: yyyy-mm-dd }}, {{ incident name }}</a></li>
+</ul>
+
+
+<div class="relations">
+<h3>Navigation</h3>
+<ul>
+  <li><a href="../index.html">Documentation Home</a><ul>
+  <li><a href="dashboards.html" title="Previous">Previous topic</a></li>
+  <li><a href="cloud.html" title="Next">Next topic</a></li>
+  </ul>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/components/ingress.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+        <form class="search" action="../search.html" method="get">
+            <input type="text" name="q" placeholder="Quick Search" aria-labelledby="searchlabel" />
+            <input type="submit" value="Go" />
+        </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017 - 2019, Binder Team.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/components/ingress.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

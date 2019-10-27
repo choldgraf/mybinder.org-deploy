@@ -1,0 +1,383 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>2018-04-18, Culler flood &#8212; Site Reliability Guide for mybinder.org 1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="2018-03-31, Server launch failures" href="2018-03-31-server-start-fail.html" />
+    <link rel="prev" title="2018-07-08, too many pods" href="2018-07-08-podsnips-aplenty.html" />
+
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<!-- Add JupyterHub styling -->
+<link rel="stylesheet" href="../_static/jupyter.css" type="text/css" />
+<link rel="shortcut icon" href="../_static/favicon.ico"/>
+
+
+  </head><body>
+<div class="rightsidebar">
+    <h3>On this page</h3>
+    <ul>
+<li><a class="reference internal" href="#">2018-04-18, Culler flood</a><ul>
+<li><a class="reference internal" href="#timeline">Timeline</a><ul>
+<li><a class="reference internal" href="#">2018-04-18 12:35</a></li>
+<li><a class="reference internal" href="#">~13:30-13:45</a></li>
+<li><a class="reference internal" href="#">14:29</a></li>
+<li><a class="reference internal" href="#">14:49</a></li>
+<li><a class="reference internal" href="#">14:43</a></li>
+<li><a class="reference internal" href="#">14:55</a></li>
+<li><a class="reference internal" href="#">15:36</a></li>
+<li><a class="reference internal" href="#">17:03</a></li>
+<li><a class="reference internal" href="#">17:23</a></li>
+<li><a class="reference internal" href="#">19:47</a></li>
+<li><a class="reference internal" href="#april-11-00">19. April, 11:00</a></li>
+<li><a class="reference internal" href="#">11:07</a></li>
+<li><a class="reference internal" href="#">11:27</a></li>
+<li><a class="reference internal" href="#">11:47</a></li>
+<li><a class="reference internal" href="#">11:58</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#lessons-learned">Lessons learned</a></li>
+<li><a class="reference internal" href="#action-items">Action items</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+   <div class='prev-next-top'>
+     
+      <a class='left-prev' href="2018-07-08-podsnips-aplenty.html" title="previous chapter">Previous</a>
+      <a class='right-next' href="2018-03-31-server-start-fail.html" title="next chapter">Next</a>
+   <div style='clear:both;'></div>
+ 
+   </div>
+
+
+          <div class="body" role="main">
+            
+  <div class="section" id="culler-flood">
+<span id="culler-flood"></span><h1>2018-04-18, Culler flood<a class="headerlink" href="#culler-flood" title="Permalink to this headline">¶</a></h1>
+<p>A deploy of updates to the Hub included an upgraded implementation of the idle-culler script and an update to kubespawner.
+The culler script had a bug which resulted in flooding the Hub with requests to stop servers that aren’t running.
+Additionally, a resource leak was introduced in the update to kubespawner,
+which caused JupyterHub to become unresponsive after launching a certain
+number of servers.
+As a result, Binder service was degraded with periodic outages of 10-30 minutes.</p>
+<div class="section" id="timeline">
+<span id="timeline"></span><h2>Timeline<a class="headerlink" href="#timeline" title="Permalink to this headline">¶</a></h2>
+<p>All times in CEST</p>
+<div class="section" id="">
+<span id="id1"></span><h3>2018-04-18 12:35<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Upgrade of jupyterhub, binderhub charts is deployed. Tests pass and builds and launches are working.</p>
+</div>
+<div class="section" id="">
+<span id="id2"></span><h3>~13:30-13:45<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Launch success drops to zero.</p>
+</div>
+<div class="section" id="">
+<span id="id3"></span><h3>14:29<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Binder outage is reported on Gitter by &#64;jakamkon, investigation is started.</p>
+<p>JupyterHub is determined to be inaccessible. Suspecting network issues, the proxy pod is restarted.
+This does not resolve the issue, so the nginx-ingress pods are restarted.
+This also does not resolve the issue.
+Upon discovering that the proxy-patches endpoint is responsive (by manually visiting https://hub.mybinder.org/user/doesntexist).
+This endpoint working means that the proxy and ingress are both working,
+and it is only the Hub itself that is not responsive.
+The hub pod is restarted, and launches quickly return back to 100% success rate.</p>
+</div>
+<div class="section" id="">
+<span id="id4"></span><h3>14:49<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>After returning the deployment to working order, the logs of the Hub pod around the start of the outage (~13:30) are investigated.
+The logs show a large and increasing volume of 400 errors in the culler,
+indicating that the recent changes in the culler may be responsible.
+This suggests that an outage will recur in a similar amount of time after restarting the Hub.</p>
+<p>Coincidence: a <a class="reference external" href="https://github.com/jupyterhub/jupyterhub/pull/1807">pull request</a> had just been merged, fixing bugs in the culler.
+It is suspected that these are exactly the bugs responsible for the outage.</p>
+<p>The process to deploy a change to mybinder.org begins:</p>
+</div>
+<div class="section" id="">
+<span id="id5"></span><h3>14:43<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference external" href="https://github.com/jupyterhub/zero-to-jupyterhub-k8s/pull/655">apply changes to jupyterhub chart</a></p>
+</div>
+<div class="section" id="">
+<span id="id6"></span><h3>14:55<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference external" href="https://github.com/jupyterhub/binderhub/pull/526">pull updated jupyterhub into binderhub chart</a></p>
+</div>
+<div class="section" id="">
+<span id="id7"></span><h3>15:36<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference external" href="https://github.com/jupyterhub/mybinder.org-deploy/pull/562">deploy to mybinder.org</a></p>
+<p>The final deploy has to be resubmitted multiple times before it succeeds.
+This is in part because the culler bug resulted in a failure to delete users,
+so users were constantly accumulating.
+The large number of users meant the updated Hub took a long time to deploy.
+When the new culler arrived it began to cull the old users,
+of which there were many.
+The sustained deletions also put a lot of load on the Hub,
+but a one-time cost because the deletions succeeded this time.</p>
+<p>Hub behavior is believed to have returned to normal.</p>
+</div>
+<div class="section" id="">
+<span id="id8"></span><h3>17:03<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Believing the issue to be resolved, work resumes,
+merging new pull requests into binderhub.</p>
+</div>
+<div class="section" id="">
+<span id="id9"></span><h3>17:23<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Observing culler behavior is fixed, but memory and CPU growth continues.
+Reviewing further changes that were part of the revised deploy,
+<a class="reference external" href="#">a new feature of kubespawner</a> is suspected as the source of the leak.
+The process begins to deploy reverting this change.
+Since this is a zero-to-jupyterhub change, it will again take an hour to propagate to mybinder.org</p>
+</div>
+<div class="section" id="">
+<span id="id10"></span><h3>19:47<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Latest deploy is attempted to mybinder.org.
+Deploying to master fails due to a bug in the newly introduced image culler.
+Updates are reverted to the last-known-working configuration.</p>
+</div>
+<div class="section" id="april-11-00">
+<span id="april-11-00"></span><h3>19. April, 11:00<a class="headerlink" href="#april-11-00" title="Permalink to this headline">¶</a></h3>
+<p>Fix for image-culler bug that prevented the previous deploy is <a class="reference external" href="https://github.com/jupyterhub/binderhub/pull/530">applied</a>
+and <a class="reference external" href="https://github.com/jupyterhub/mybinder.org-deploy/pull/567">deployed</a>.</p>
+</div>
+<div class="section" id="">
+<span id="id11"></span><h3>11:07<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>This deploy is successful except on production,
+due to another bug in the image cleaner.</p>
+<p>This time, the image cleaner is disabled by
+<a class="reference external" href="https://github.com/jupyterhub/mybinder.org-deploy/pull/568">setting the inode threshold to 0</a> without reverting other changes.</p>
+</div>
+<div class="section" id="">
+<span id="id12"></span><h3>11:27<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>Deploy is successful, but took close to half an hour.
+Memory leak is not fixed.</p>
+</div>
+<div class="section" id="">
+<span id="id13"></span><h3>11:47<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>To avoid reverting more large deploys,
+only the hub image is <a class="reference external" href="https://github.com/jupyterhub/mybinder.org-deploy/pull/569">reverted to the last known good version</a>.</p>
+<p>After reverting the hub image update, everything is okay again.</p>
+</div>
+<div class="section" id="">
+<span id="id14"></span><h3>11:58<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>On investigation of logs, it appears that the Hub was not fully upgraded to its target version.
+The cause for this is still unknown,
+but could be the result of manual interactions with the cluster during the upgrade.</p>
+<p>The pinning of the hub image is <a class="reference external" href="https://github.com/jupyterhub/mybinder.org-deploy/pull/570">reverted</a>
+and everything is now up-to-date.
+It is observed that the memory leak does not recur,
+confirming that the kubespawner update is the root cause.</p>
+</div>
+</div>
+<div class="section" id="lessons-learned">
+<span id="lessons-learned"></span><h2>Lessons learned<a class="headerlink" href="#lessons-learned" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>It takes about an hour to deploy a change to zero-to-jupyterhub all the way to
+mybinder.org. This is because we must wait for the tests in all repositories to
+run twice: once to verify the pull request, then again after merge before
+publishing the chart. Since these tests each take ~10 minutes, that’s 40
+minutes of waiting, not counting the human time of observing one success and
+submitting the next pull request.</p></li>
+<li><p>Culler behavior is not covered by tests.
+This is difficult, since the culler accumulates tasks over time,
+but some basic test coverage should be possible.</p></li>
+<li><p>Image cleaner is not covered by tests.</p></li>
+<li><p>Deploying many changes at once makes it more challenging to identify the causes of regressions.</p></li>
+<li><p>Since so many of these deployment processes take a very long time,
+even if a fix is known, reverting a bad version and waiting for the new one
+may often be preferable to keeping the degraded state while the fix propagates.
+The downside of doing this is that large (many services changed) deploys
+can take a long time as rolling updates are performed.
+Reverting a large deploy can result in significant downtime
+during the revert.</p></li>
+<li><p>Three separate bugs were introduced and resolved in this process:</p>
+<ol class="simple">
+<li><p>flood bug in updated culler</p></li>
+<li><p>memory leak bug in updated kubespawner</p></li>
+<li><p>failure-to-start bug in new image-cleaner
+More granular continuous deployments would have allowed us to find and catch
+each of these issues one at a time.
+On the other hand, deploying at dedicated, less frequent times
+would allow the team to be prepared to handle and respond to the update process,
+rather than reacting to issues as they are deployed throughout the week.</p></li>
+</ol>
+</li>
+</ul>
+</div>
+<div class="section" id="action-items">
+<span id="action-items"></span><h2>Action items<a class="headerlink" href="#action-items" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Revisit automatic pull requests to encourage keeping
+mybinder.org up-to-date with smaller, more-frequent changes
+(<a class="reference external" href="https://github.com/jupyterhub/binderhub/pull/222">Issue</a>)</p></li>
+<li><p>Add alarms for sustained high CPU and memory usage from JupyterHub and BinderHub pods. Related to <a class="reference external" href="https://github.com/jupyterhub/mybinder.org-deploy/pull/527">this issue</a></p></li>
+<li><p>Figure out tests for the culler (this may be part of splitting out the culler into its own package)
+(<a class="reference external" href="https://github.com/jupyterhub/jupyterhub/issues/1791">Issue</a>)</p></li>
+<li><p>Fix bugs in image-culler preventing it from running
+(<a class="reference external" href="https://github.com/jupyterhub/binderhub/pull/534">PR</a>)</p></li>
+<li><p>Allow disabling image culler in helm chart</p></li>
+<li><p>Investigate and fix memory leak in kubespawner
+(<a class="reference external" href="https://github.com/jupyterhub/kubespawner/issues/165">Issue</a>)</p></li>
+<li><p>Describe process for deploying jupyterhub image bumps to mybinder.org as short-term fixes during an incident?</p></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+   <div class='prev-next-bottom'>
+     
+      <a class='left-prev' href="2018-07-08-podsnips-aplenty.html" title="previous chapter">2018-07-08, too many pods</a>
+      <a class='right-next' href="2018-03-31-server-start-fail.html" title="next chapter">2018-03-31, Server launch failures</a>
+   <div style='clear:both;'></div>
+ 
+   </div>
+
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <p class="logo"><a href="../index.html">
+    <img class="logo" src="../_static/logo.jpg" alt="Logo"/>
+  </a></p>
+<h1 class="logo"><a href="../index.html">Site Reliability Guide for mybinder.org</a></h1>
+
+
+
+<p class="blurb">A Site Reliability Guide for mybinder.org deployment</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=jupyterhub&repo=binderhub&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<h3>Table of Contents</h3>
+<p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting started with the <code class="docutils literal notranslate"><span class="pre">mybinder.org</span></code> dev team</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../production_environment.html">Production environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../terminology.html">Terminology for the deployment</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Deployment</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/prereqs.html">Pre-requisite technologies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/how.html">How to deploy a change to mybinder.org?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/what.html">What does a MyBinder.org deployment do?</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Operation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../common_problems.html">Common problems and their solutions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../command_snippets.html">Command snippets used during operations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../grafana_plots.html">Some useful Grafana plots</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../components/metrics.html">Metrics collection with Prometheus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/dashboards.html">Operational Dashboards with Grafana</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/ingress.html">HTTPS ingress with nginx + kube-lego</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/cloud.html">Cloud products</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/matomo.html">Matomo (formerly Piwik) analytics</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../analytics/events-archive.html">The Analytics Events Archive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analytics/cloud-costs.html">Cloud Costs Data</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Incidents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="2019-04-03-ingress-cordoned.html">2019-04-03, 30min outage during node pool upgrade</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2019-03-24-r2d-upgrade.html">2019-03-24, repo2docker upgrade and docker image cache wipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2019-02-20-no-logs.html">incident date: 2019-02-20, kubectl logs unavailable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-07-30-jupyterlab-build-cpu-saturate.html">2018-07-30 JupyterLab builds saturate BinderHub CPU</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-07-08-podsnips-aplenty.html">2018-07-08, too many pods</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">2018-04-18, Culler flood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-03-31-server-start-fail.html">2018-03-31, Server launch failures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-03-26-no-space-left.html">2018-03-26, “no space left on device”</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-03-13-PVC-hub-locked.html">2018-03-13, PVC for hub is locked</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-02-22-nginx-down.html">2018-02-22 NGINX crash</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-02-20-jupyterlab-announcement.html">2018-02-20, JupyterLab Announcement swamps Binder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-02-12-launch-fail.html">2018-02-12, Hub Launch Fail</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-01-18-reddit-hug.html">2018-01-18, reddit hugs mybinder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-01-18-ssl-outdated.html">2018-01-11, Warning from letsencrypt about outdated SSL certificate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-01-17-ubuntu-upgrade.html">2018-01-17, Emergency Aardvark bump</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-01-04-failed-staging-deploy.html">2018-01-04, Failed deploy to staging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2017-11-30-oom-proxy.html">2017-11-30 4:23PM PST, OOM (Out of Memory) Proxy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2017-10-17-cluster-full.html">2017-10-17, Cluster Full</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2017-09-29-504.html">2017-09-29, 504</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2017-09-27-hub-403.html">2017-09-27, Hub 403</a></li>
+<li class="toctree-l1"><a class="reference internal" href="template-incident-report.html">Template for reports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="template-incident-report.html#incident-date-yyyy-mm-dd-incident-name">{{ incident date: yyyy-mm-dd }}, {{ incident name }}</a></li>
+</ul>
+
+
+<div class="relations">
+<h3>Navigation</h3>
+<ul>
+  <li><a href="../index.html">Documentation Home</a><ul>
+  <li><a href="2018-07-08-podsnips-aplenty.html" title="Previous">Previous topic</a></li>
+  <li><a href="2018-03-31-server-start-fail.html" title="Next">Next topic</a></li>
+  </ul>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/incident-reports/2018-04-18-cull-flood.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+        <form class="search" action="../search.html" method="get">
+            <input type="text" name="q" placeholder="Quick Search" aria-labelledby="searchlabel" />
+            <input type="submit" value="Go" />
+        </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017 - 2019, Binder Team.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/incident-reports/2018-04-18-cull-flood.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

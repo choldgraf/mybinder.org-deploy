@@ -1,0 +1,301 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>2017-09-29, 504 &#8212; Site Reliability Guide for mybinder.org 1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="2017-09-27, Hub 403" href="2017-09-27-hub-403.html" />
+    <link rel="prev" title="2017-10-17, Cluster Full" href="2017-10-17-cluster-full.html" />
+
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<!-- Add JupyterHub styling -->
+<link rel="stylesheet" href="../_static/jupyter.css" type="text/css" />
+<link rel="shortcut icon" href="../_static/favicon.ico"/>
+
+
+  </head><body>
+<div class="rightsidebar">
+    <h3>On this page</h3>
+    <ul>
+<li><a class="reference internal" href="#">2017-09-29, 504</a><ul>
+<li><a class="reference internal" href="#summary">Summary</a></li>
+<li><a class="reference internal" href="#timeline">Timeline</a><ul>
+<li><a class="reference internal" href="#sep-29-2017-08-59">Sep 29 2017 08:59</a></li>
+<li><a class="reference internal" href="#">14:00</a></li>
+<li><a class="reference internal" href="#">14:10</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#action-items">Action Items</a><ul>
+<li><a class="reference internal" href="#binderhub">BinderHub</a></li>
+<li><a class="reference internal" href="#kubespawner">KubeSpawner</a></li>
+<li><a class="reference internal" href="#deployment">Deployment</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+   <div class='prev-next-top'>
+     
+      <a class='left-prev' href="2017-10-17-cluster-full.html" title="previous chapter">Previous</a>
+      <a class='right-next' href="2017-09-27-hub-403.html" title="next chapter">Next</a>
+   <div style='clear:both;'></div>
+ 
+   </div>
+
+
+          <div class="body" role="main">
+            
+  <div class="section" id="">
+<span id="id1"></span><h1>2017-09-29, 504<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="summary">
+<span id="summary"></span><h2>Summary<a class="headerlink" href="#summary" title="Permalink to this headline">¶</a></h2>
+<p>mybinder.org was failing to launch any images.
+Building worked fine, but launching would fail with 504 Timeout on <code class="docutils literal notranslate"><span class="pre">/run?</span></code>, served by nginx.
+Further, not visible to users, some idle users were unable to be deleted.</p>
+</div>
+<div class="section" id="timeline">
+<span id="timeline"></span><h2>Timeline<a class="headerlink" href="#timeline" title="Permalink to this headline">¶</a></h2>
+<p>All times in CEST</p>
+<div class="section" id="sep-29-2017-08-59">
+<span id="sep-29-2017-08-59"></span><h3>Sep 29 2017 08:59<a class="headerlink" href="#sep-29-2017-08-59" title="Permalink to this headline">¶</a></h3>
+<p>https://github.com/jupyterhub/binderhub/issues/140 is opened, reporting failure to build due to “Stream disconnection”</p>
+</div>
+<div class="section" id="">
+<span id="id2"></span><h3>14:00<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>while investigating the above issue, test builds were performed of the affected repo.
+Builds succeeded (failing to reproduce the issue), but launching the image failed with nginx 504 Timeout. No image could be launched.</p>
+<p>After retrieving the pods for the Hub log, several errors were discovered:</p>
+<ul>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">Spawner.start()</span></code> method is not returning, as indicated by the logs:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>  <span class="n">binder</span><span class="o">-</span><span class="n">testing</span><span class="o">-</span><span class="n">xyz</span><span class="s1">&#39;s server failed to start in 300 seconds, giving up</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>This is the first stage in launching, and purely under <code class="docutils literal notranslate"><span class="pre">KubeSpawner</span></code>’s control.
+JupyterHub does not get a chance to proceed to check if the server is running.</p>
+<ul class="simple">
+<li><p>Inspecting the pod that failed to start reveals that it is indeed running and responsive.</p></li>
+</ul>
+<p>At the same time, other errors are in the logs:</p>
+<ul>
+<li><p>Some Spawners had entered a permanent <code class="docutils literal notranslate"><span class="pre">stop_pending</span></code> state, as indicated by the cull-idle service failing to delete users because they were ‘pending stop’. Logs:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>  <span class="mi">400</span> <span class="n">DELETE</span> <span class="o">/</span><span class="n">hub</span><span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">users</span><span class="o">/</span><span class="n">binder</span><span class="o">-</span><span class="n">testing</span><span class="o">-</span><span class="n">chcr2h3j</span> <span class="p">(</span><span class="mf">1.2</span><span class="o">.</span><span class="mf">3.4</span><span class="p">):</span> <span class="n">binder</span><span class="o">-</span><span class="n">testing</span><span class="o">-</span><span class="n">chcr2h3j</span><span class="s1">&#39;s server is in the process of stopping, please wait.</span>
+</pre></div>
+</div>
+</li>
+<li><p>inspecting the logs reveals that the pod has been deleted, but <code class="docutils literal notranslate"><span class="pre">Spawner.stop</span></code> has not returned.</p></li>
+<li><p>I believe this has been reported before here: https://github.com/jupyterhub/jupyterhub/issues/1420</p></li>
+</ul>
+<p>I believe all of these are reflecting a bug in the KubeSpawner reflector missing events and never recovering (see https://github.com/jupyterhub/kubespawner/pull/81 for a possible fix).</p>
+<p>Additionally, there were several errors related to the reflector connection, which are likely related to the unhandled events:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>2017-09-29 00:46:54,810 WARNING Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by &#39;NewConnectionError(&#39;&lt;urllib3.connection.VerifiedHTTPSConnection object at 0x7fd66401bd68&gt;: Failed to establish a new connection: [Errno 111] Connection refused&#39;,)&#39;: /api/v1/namespaces/beta/pods?labelSelector=heritage%3Djupyterhub%2Ccomponent%3Dsingleuser-server
+[E 2017-09-29 00:46:54.814 JupyterHub reflector:113] Error when watching pods, retrying in 25.6s
+&lt;snip&gt;
+    urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host=&#39;x.x.x.x&#39;, port=443): Max retries exceeded with url: /api/v1/namespaces/beta/pods?labelSelector=heritage%3Djupyterhub%2Ccomponent%3Dsingleuser-server (Caused by NewConnectionError(&#39;&lt;urllib3.connection.VerifiedHTTPSConnection object at 0x7fd666225748&gt;: Failed to establish a new connection: [Errno 111] Connection refused&#39;,))
+</pre></div>
+</div>
+</div>
+<div class="section" id="">
+<span id="id3"></span><h3>14:10<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>hub pod is relaunched to clear invalid state.
+Service is back to normal, though no actual fixes have been applied.
+The same issue is expected to return.</p>
+</div>
+</div>
+<div class="section" id="action-items">
+<span id="action-items"></span><h2>Action Items<a class="headerlink" href="#action-items" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="binderhub">
+<span id="binderhub"></span><h3>BinderHub<a class="headerlink" href="#binderhub" title="Permalink to this headline">¶</a></h3>
+<ol class="simple">
+<li><p>Removing the redirect page will get rid of the 504 timeout issue
+by redirecting directly from the event-streams on the build page
+<a class="reference external" href="https://github.com/jupyterhub/binderhub/pull/135">Pull Request</a>.</p></li>
+<li><p>Diagnose the original <a class="reference external" href="https://github.com/jupyterhub/binderhub/issues/140">issue</a>,
+which still has not been identified.</p></li>
+</ol>
+</div>
+<div class="section" id="kubespawner">
+<span id="kubespawner"></span><h3>KubeSpawner<a class="headerlink" href="#kubespawner" title="Permalink to this headline">¶</a></h3>
+<ol class="simple">
+<li><p>Fix known issue of PodReflector missing events
+<a class="reference external" href="https://github.com/jupyterhub/kubespawner/pull/81">Pull Request</a>.</p></li>
+<li><p>Investigate further possibilities of reflector failure and recovery
+<a class="reference external" href="https://github.com/jupyterhub/kubespawner/issues/85">Issue</a></p></li>
+<li><p>Unrecoverable PodReflector errors should abort the Hub
+<a class="reference external" href="https://github.com/jupyterhub/kubespawner/pull/86">Pull Request</a>.</p></li>
+</ol>
+<p>The primary cause of these issues is the loss of events on the KubeSpawner PodReflector.
+https://github.com/jupyterhub/kubespawner/pull/81 fixes at least one known case.</p>
+</div>
+<div class="section" id="deployment">
+<span id="deployment"></span><h3>Deployment<a class="headerlink" href="#deployment" title="Permalink to this headline">¶</a></h3>
+<ol class="simple">
+<li><p>Implement health monitoring and alerting to respond more quickly to these problems <a class="reference external" href="https://github.com/jupyterhub/mybinder.org-deploy/issues/19">Issue</a>.</p></li>
+<li><p>Automatic recovery could potentially relaunch the Hub pod when it enters an unhealthy state.</p></li>
+</ol>
+</div>
+</div>
+</div>
+
+
+          </div>
+   <div class='prev-next-bottom'>
+     
+      <a class='left-prev' href="2017-10-17-cluster-full.html" title="previous chapter">2017-10-17, Cluster Full</a>
+      <a class='right-next' href="2017-09-27-hub-403.html" title="next chapter">2017-09-27, Hub 403</a>
+   <div style='clear:both;'></div>
+ 
+   </div>
+
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <p class="logo"><a href="../index.html">
+    <img class="logo" src="../_static/logo.jpg" alt="Logo"/>
+  </a></p>
+<h1 class="logo"><a href="../index.html">Site Reliability Guide for mybinder.org</a></h1>
+
+
+
+<p class="blurb">A Site Reliability Guide for mybinder.org deployment</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=jupyterhub&repo=binderhub&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<h3>Table of Contents</h3>
+<p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting started with the <code class="docutils literal notranslate"><span class="pre">mybinder.org</span></code> dev team</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../production_environment.html">Production environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../terminology.html">Terminology for the deployment</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Deployment</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/prereqs.html">Pre-requisite technologies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/how.html">How to deploy a change to mybinder.org?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/what.html">What does a MyBinder.org deployment do?</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Operation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../common_problems.html">Common problems and their solutions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../command_snippets.html">Command snippets used during operations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../grafana_plots.html">Some useful Grafana plots</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../components/metrics.html">Metrics collection with Prometheus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/dashboards.html">Operational Dashboards with Grafana</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/ingress.html">HTTPS ingress with nginx + kube-lego</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/cloud.html">Cloud products</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/matomo.html">Matomo (formerly Piwik) analytics</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../analytics/events-archive.html">The Analytics Events Archive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analytics/cloud-costs.html">Cloud Costs Data</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Incidents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="2019-04-03-ingress-cordoned.html">2019-04-03, 30min outage during node pool upgrade</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2019-03-24-r2d-upgrade.html">2019-03-24, repo2docker upgrade and docker image cache wipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2019-02-20-no-logs.html">incident date: 2019-02-20, kubectl logs unavailable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-07-30-jupyterlab-build-cpu-saturate.html">2018-07-30 JupyterLab builds saturate BinderHub CPU</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-07-08-podsnips-aplenty.html">2018-07-08, too many pods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-04-18-cull-flood.html">2018-04-18, Culler flood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-03-31-server-start-fail.html">2018-03-31, Server launch failures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-03-26-no-space-left.html">2018-03-26, “no space left on device”</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-03-13-PVC-hub-locked.html">2018-03-13, PVC for hub is locked</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-02-22-nginx-down.html">2018-02-22 NGINX crash</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-02-20-jupyterlab-announcement.html">2018-02-20, JupyterLab Announcement swamps Binder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-02-12-launch-fail.html">2018-02-12, Hub Launch Fail</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-01-18-reddit-hug.html">2018-01-18, reddit hugs mybinder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-01-18-ssl-outdated.html">2018-01-11, Warning from letsencrypt about outdated SSL certificate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-01-17-ubuntu-upgrade.html">2018-01-17, Emergency Aardvark bump</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2018-01-04-failed-staging-deploy.html">2018-01-04, Failed deploy to staging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2017-11-30-oom-proxy.html">2017-11-30 4:23PM PST, OOM (Out of Memory) Proxy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2017-10-17-cluster-full.html">2017-10-17, Cluster Full</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">2017-09-29, 504</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2017-09-27-hub-403.html">2017-09-27, Hub 403</a></li>
+<li class="toctree-l1"><a class="reference internal" href="template-incident-report.html">Template for reports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="template-incident-report.html#incident-date-yyyy-mm-dd-incident-name">{{ incident date: yyyy-mm-dd }}, {{ incident name }}</a></li>
+</ul>
+
+
+<div class="relations">
+<h3>Navigation</h3>
+<ul>
+  <li><a href="../index.html">Documentation Home</a><ul>
+  <li><a href="2017-10-17-cluster-full.html" title="Previous">Previous topic</a></li>
+  <li><a href="2017-09-27-hub-403.html" title="Next">Next topic</a></li>
+  </ul>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/incident-reports/2017-09-29-504.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+        <form class="search" action="../search.html" method="get">
+            <input type="text" name="q" placeholder="Quick Search" aria-labelledby="searchlabel" />
+            <input type="submit" value="Go" />
+        </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017 - 2019, Binder Team.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/incident-reports/2017-09-29-504.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

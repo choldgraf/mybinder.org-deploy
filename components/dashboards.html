@@ -1,0 +1,268 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Operational Dashboards with Grafana &#8212; Site Reliability Guide for mybinder.org 1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="HTTPS ingress with nginx + kube-lego" href="ingress.html" />
+    <link rel="prev" title="Metrics collection with Prometheus" href="metrics.html" />
+
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<!-- Add JupyterHub styling -->
+<link rel="stylesheet" href="../_static/jupyter.css" type="text/css" />
+<link rel="shortcut icon" href="../_static/favicon.ico"/>
+
+
+  </head><body>
+<div class="rightsidebar">
+    <h3>On this page</h3>
+    <ul>
+<li><a class="reference internal" href="#">Operational Dashboards with Grafana</a><ul>
+<li><a class="reference internal" href="#what-is-it">What is it?</a></li>
+<li><a class="reference internal" href="#where-is-it">Where is it?</a></li>
+<li><a class="reference internal" href="#modifying-dashboards">Modifying dashboards</a></li>
+<li><a class="reference internal" href="#installation-configuration">Installation &amp; Configuration</a></li>
+<li><a class="reference internal" href="#annotations">Annotations</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+   <div class='prev-next-top'>
+     
+      <a class='left-prev' href="metrics.html" title="previous chapter">Previous</a>
+      <a class='right-next' href="ingress.html" title="next chapter">Next</a>
+   <div style='clear:both;'></div>
+ 
+   </div>
+
+
+          <div class="body" role="main">
+            
+  <div class="section" id="operational-dashboards-with-grafana">
+<span id="operational-dashboards-with-grafana"></span><h1>Operational Dashboards with Grafana<a class="headerlink" href="#operational-dashboards-with-grafana" title="Permalink to this headline">¶</a></h1>
+<p>We use <a class="reference external" href="https://grafana.com/">Grafana</a> for creating dashboards
+from our <a class="reference external" href="metrics.html">metrics</a>. Dashboards are useful for
+understanding the current status of the system and all its components
+at a glance. They are also very useful to try and debug what
+is going wrong during / after an outage.</p>
+<div class="section" id="what-is-it">
+<span id="what-is-it"></span><h2>What is it?<a class="headerlink" href="#what-is-it" title="Permalink to this headline">¶</a></h2>
+<img alt="components/../../_static/images/dashboard.png" src="components/../../_static/images/dashboard.png" />
+<p>A dashboard is a set of pre-defined graphs in a particular layout that
+provide an overview of a system. In our case, they provide an overview
+of the <a class="reference external" href="metrics.html">operational metrics</a> of the components that make
+up mybinder.org.</p>
+</div>
+<div class="section" id="where-is-it">
+<span id="where-is-it"></span><h2>Where is it?<a class="headerlink" href="#where-is-it" title="Permalink to this headline">¶</a></h2>
+<p>Our dashboards are at <a class="reference external" href="https://grafana.mybinder.org">grafana.mybinder.org</a>.
+It is public for everyone to view - but to edit, you need an admin password
+that is private. Open an issue in <a class="reference external" href="https://github.com/jupyterhub/mybinder.org-deploy">jupyterhub/mybinder.org-deploy</a>
+if you want write access to the dashboards.</p>
+<p>You can click the button to the right of the Grafana logo in the top left,
+and it will open a drop-down menu of dashboards for the mybinder.org deployment.</p>
+</div>
+<div class="section" id="modifying-dashboards">
+<span id="modifying-dashboards"></span><h2>Modifying dashboards<a class="headerlink" href="#modifying-dashboards" title="Permalink to this headline">¶</a></h2>
+<p>Each dashboard is edited directly from the user interface (if you have
+access to edit it). You can click on any graph and select the <code class="docutils literal notranslate"><span class="pre">Edit</span></code> option
+to see what queries make up the dashboard, and how you can edit it.
+All the dashboard definitions are stored in an <code class="docutils literal notranslate"><span class="pre">sqlite</span></code> database on a
+disk attached to the running grafana instance.</p>
+<p>The <a class="reference external" href="http://docs.grafana.org/guides/basic_concepts/">Grafana documentation</a>
+has more info on the various concepts in Grafana, and how you can use them.
+You can also create a new dashboard and play with it. Be careful before
+editing currently used dashboards!</p>
+</div>
+<div class="section" id="installation-configuration">
+<span id="installation-configuration"></span><h2>Installation &amp; Configuration<a class="headerlink" href="#installation-configuration" title="Permalink to this headline">¶</a></h2>
+<p>Grafana is installed with the <a class="reference external" href="https://github.com/kubernetes/charts/tree/master/stable/grafana">Grafana helm chart</a>.
+You can see the options for configuring it documented in its
+<a class="reference external" href="https://github.com/kubernetes/charts/blob/master/stable/grafana/values.yaml"><code class="docutils literal notranslate"><span class="pre">values.yaml</span></code></a>
+file. You can also see the specific ways we have configured it
+in the <code class="docutils literal notranslate"><span class="pre">grafana</span></code> section of <code class="docutils literal notranslate"><span class="pre">mybinder/values.yaml</span></code>, <code class="docutils literal notranslate"><span class="pre">config/prod.yaml</span></code>
+and <code class="docutils literal notranslate"><span class="pre">config/staging.yaml</span></code>.</p>
+</div>
+<div class="section" id="annotations">
+<span id="annotations"></span><h2>Annotations<a class="headerlink" href="#annotations" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="http://docs.grafana.org/reference/annotations/">Annotations</a> are
+a cool feature of Grafana that lets us add arbitrary markers tagged to
+all graphs marking an event that has happened. For example, you can
+create an annotation each time a deployment happens - this puts a
+marker with info about the deployment on each graph, so you can easily
+tell if a particular deployment has caused changes in any metric.
+This is very useful for debugging!</p>
+<p>We use the script in <code class="docutils literal notranslate"><span class="pre">travis/post-grafana-annotation.py</span></code> to
+create annotations just before each deployment. See the docstring in
+the script for more details.</p>
+</div>
+</div>
+
+
+          </div>
+   <div class='prev-next-bottom'>
+     
+      <a class='left-prev' href="metrics.html" title="previous chapter">Metrics collection with Prometheus</a>
+      <a class='right-next' href="ingress.html" title="next chapter">HTTPS ingress with nginx + kube-lego</a>
+   <div style='clear:both;'></div>
+ 
+   </div>
+
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <p class="logo"><a href="../index.html">
+    <img class="logo" src="../_static/logo.jpg" alt="Logo"/>
+  </a></p>
+<h1 class="logo"><a href="../index.html">Site Reliability Guide for mybinder.org</a></h1>
+
+
+
+<p class="blurb">A Site Reliability Guide for mybinder.org deployment</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=jupyterhub&repo=binderhub&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<h3>Table of Contents</h3>
+<p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting started with the <code class="docutils literal notranslate"><span class="pre">mybinder.org</span></code> dev team</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../production_environment.html">Production environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../terminology.html">Terminology for the deployment</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Deployment</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/prereqs.html">Pre-requisite technologies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/how.html">How to deploy a change to mybinder.org?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/what.html">What does a MyBinder.org deployment do?</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Operation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../common_problems.html">Common problems and their solutions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../command_snippets.html">Command snippets used during operations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../grafana_plots.html">Some useful Grafana plots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../federation.html">The mybinder.org Federation</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="metrics.html">Metrics collection with Prometheus</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Operational Dashboards with Grafana</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#what-is-it">What is it?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#where-is-it">Where is it?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#modifying-dashboards">Modifying dashboards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation-configuration">Installation &amp; Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#annotations">Annotations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ingress.html">HTTPS ingress with nginx + kube-lego</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cloud.html">Cloud products</a></li>
+<li class="toctree-l1"><a class="reference internal" href="matomo.html">Matomo (formerly Piwik) analytics</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../analytics/events-archive.html">The Analytics Events Archive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analytics/cloud-costs.html">Cloud Costs Data</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Incidents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2019-04-03-ingress-cordoned.html">2019-04-03, 30min outage during node pool upgrade</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2019-03-24-r2d-upgrade.html">2019-03-24, repo2docker upgrade and docker image cache wipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2019-02-20-no-logs.html">incident date: 2019-02-20, kubectl logs unavailable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-07-30-jupyterlab-build-cpu-saturate.html">2018-07-30 JupyterLab builds saturate BinderHub CPU</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-07-08-podsnips-aplenty.html">2018-07-08, too many pods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-04-18-cull-flood.html">2018-04-18, Culler flood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-03-31-server-start-fail.html">2018-03-31, Server launch failures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-03-26-no-space-left.html">2018-03-26, “no space left on device”</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-03-13-PVC-hub-locked.html">2018-03-13, PVC for hub is locked</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-02-22-nginx-down.html">2018-02-22 NGINX crash</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-02-20-jupyterlab-announcement.html">2018-02-20, JupyterLab Announcement swamps Binder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-02-12-launch-fail.html">2018-02-12, Hub Launch Fail</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-01-18-reddit-hug.html">2018-01-18, reddit hugs mybinder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-01-18-ssl-outdated.html">2018-01-11, Warning from letsencrypt about outdated SSL certificate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-01-17-ubuntu-upgrade.html">2018-01-17, Emergency Aardvark bump</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2018-01-04-failed-staging-deploy.html">2018-01-04, Failed deploy to staging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2017-11-30-oom-proxy.html">2017-11-30 4:23PM PST, OOM (Out of Memory) Proxy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2017-10-17-cluster-full.html">2017-10-17, Cluster Full</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2017-09-29-504.html">2017-09-29, 504</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/2017-09-27-hub-403.html">2017-09-27, Hub 403</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/template-incident-report.html">Template for reports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../incident-reports/template-incident-report.html#incident-date-yyyy-mm-dd-incident-name">{{ incident date: yyyy-mm-dd }}, {{ incident name }}</a></li>
+</ul>
+
+
+<div class="relations">
+<h3>Navigation</h3>
+<ul>
+  <li><a href="../index.html">Documentation Home</a><ul>
+  <li><a href="metrics.html" title="Previous">Previous topic</a></li>
+  <li><a href="ingress.html" title="Next">Next topic</a></li>
+  </ul>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/components/dashboards.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+        <form class="search" action="../search.html" method="get">
+            <input type="text" name="q" placeholder="Quick Search" aria-labelledby="searchlabel" />
+            <input type="submit" value="Go" />
+        </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017 - 2019, Binder Team.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/components/dashboards.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
